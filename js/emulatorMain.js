@@ -23,6 +23,7 @@ app.service('sharedProperties', function ($rootScope) {
     };
 
     return{
+        state : state,
         getGameUrl: function () {
             return gameUrl;
         },
@@ -69,14 +70,24 @@ controllers.urlCtrl = function($scope, sharedProperties){
         document.getElementById("console").value += message + "\n";
     };
 
-    $scope.setUrl = function (url) {
+    $scope.setUrl = function (url, noOfPlayers) {
         sharedProperties.setGameUrl(url);
-    }
+        sharedProperties.setNumberOfPlayers(noOfPlayers);
+        $scope.makeFrames(noOfPlayers);
+    };
 
-    $scope.send = function(){
-        $scope.console("Sending: ");
-        document.getElementById("frame1").postMessage("Hello","*");
-    }
+    $scope.makeFrames = function (noOfPlayers) {
+        for(var i = 0; i < noOfPlayers; i++) {
+            parent = document.getElementById("frames")
+            ifrm = document.createElement("IFRAME");
+            ifrm.setAttribute("src", sharedProperties.getGameUrl());
+            ifrm.setAttribute("id","frame"+i);
+            ifrm.style.width = 640 + "px";
+            ifrm.style.height = 480 + "px";
+            parent.insertBefore(ifrm);
+            sharedProperties.state.playersIframe[i] = ifrm;
+        }
+    };
 
 };
 
@@ -109,6 +120,12 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
             $scope.send(state.playersIframe[i], {"type": "StartGame", "state":state.gameState,"yourPlayerId": i, "playerIds":playerIds})
         }
     };
+
+
+    $scope.test = function() {
+        $scope.send(sharedProperties.state.playersIframe[0].contentWindow,{"test":"message"})
+    };
+
 
     //Function that shuffles the keys and returns the shuffled set
     $scope.shuffle =  function(keys){
