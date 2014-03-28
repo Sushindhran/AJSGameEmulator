@@ -9,6 +9,7 @@ app.service('sharedProperties', function ($rootScope) {
     var state = {playersIframe : []};
     state.gameState = {};
     state.visibleTo = {};
+    state.playerIdToNoOfTokensInPot = {};
     var numberOfPlayers = 0;
 
     //Function to display messages on the console
@@ -56,6 +57,9 @@ app.service('sharedProperties', function ($rootScope) {
         setNumberOfPlayers: function(noPlayers){
             numberOfPlayers = noPlayers;
         },
+        setPlayersInfo : function(players){
+            playersInfo = players;
+        },
         broadcast: broadcast
     };
 });
@@ -76,6 +80,16 @@ controllers.urlCtrl = function($scope, sharedProperties){
         $scope.makeFrames(noOfPlayers);
     };
 
+    $scope.createPlayersInfo = function (noOfPlayers) {
+        var list = [];
+        var i = 0, playerId = 42;
+        for(i=0; i< noOfPlayers; i++) {
+            playerId += i;
+            list.concat({"playerId":playerId})
+        }
+        sharedProperties.setPlayersInfo(list);
+    }
+
     $scope.makeFrames = function (noOfPlayers) {
         for(var i = 0; i < noOfPlayers; i++) {
             parent = document.getElementById("frames")
@@ -85,7 +99,6 @@ controllers.urlCtrl = function($scope, sharedProperties){
             ifrm.style.width = 640 + "px";
             ifrm.style.height = 480 + "px";
             parent.insertBefore(ifrm);
-            sharedProperties.state.playersIframe[i] = ifrm;
         }
     };
 
@@ -138,6 +151,14 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
         }
         return result;
     };
+
+    // Function that finds out which player sent the message
+    var findMessageSource = function(source) {
+        for(var i = 0 ; i < sharedProperties.playersIframe.length; i++) {
+            if (source === sharedProperties.playersIframe[i])
+                return i;
+        }
+    }
 
     //Function that handles the callback and mutates the state.
     var handleCallback = function (msg) {
