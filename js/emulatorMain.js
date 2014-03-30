@@ -10,6 +10,7 @@ app.service('sharedProperties', function ($rootScope) {
     state.gameState = {};
     state.visibleTo = {};
     state.playerIdToNoOfTokensInPot = {};
+    state.playersInfo = [];
     var numberOfPlayers = 0;
 
     //Function to display messages on the console
@@ -39,9 +40,6 @@ app.service('sharedProperties', function ($rootScope) {
         setState: function(st){
             state = st;
         },
-        getGameState: function(){
-            return state.gameState;
-        },
         setGameState: function(gState){
             state.gameState = gState;
         },
@@ -58,7 +56,7 @@ app.service('sharedProperties', function ($rootScope) {
             numberOfPlayers = noPlayers;
         },
         setPlayersInfo : function(players){
-            playersInfo = players;
+            state.playersInfo = players;
         },
         broadcast: broadcast
     };
@@ -75,9 +73,11 @@ controllers.urlCtrl = function($scope, sharedProperties){
     };
 
     $scope.setUrl = function (url, noOfPlayers) {
-        sharedProperties.setGameUrl(url);
         sharedProperties.setNumberOfPlayers(noOfPlayers);
         $scope.makeFrames(noOfPlayers);
+        $scope.createPlayersInfo(noOfPlayers);
+        sharedProperties.setGameUrl(url);
+
     };
 
     $scope.createPlayersInfo = function (noOfPlayers) {
@@ -128,11 +128,22 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
     };
 
     //To be modified
-    $scope.sendGameState =  function(){
-        for(var i=0; i<2;i++){
-            $scope.send(state.playersIframe[i], {"type": "StartGame", "state":state.gameState,"yourPlayerId": i, "playerIds":playerIds})
-        }
+    $scope.sendUpdateUi =  function(source, yourPlayerId){
+            var state = sharedProperties.getState();
+
+            $scope.send(source, {"playersInfo": sharedProperties.playersInfo, "type": "UpdateUI", "state":state.gameState, "lastState":state.lastState,
+               "lastMove":state.lastMove, "lastMovePlayerId": state.lastMovePlayerId, "playerIdToNoOfTokensInPot":state.playerIdToNoOfTokensInPot,
+                 "lastMove": state.lastMove, "yourPlayerId": yourPlayerId.toString() });
+
     };
+
+    $scope.sendVerifyMove = function(source) {
+        var state = sharedProperties.getState();
+
+        $scope.send(source, {"playersInfo": sharedProperties.playersInfo, "type": "VerifyMove", "state":state.gameState, "lastState":state.lastState,
+            "lastMove":state.lastMove, "lastMovePlayerId": state.lastMovePlayerId, "playerIdToNoOfTokensInPot":state.playerIdToNoOfTokensInPot,
+            "lastMove": state.lastMove });
+    }
 
 
     $scope.test = function() {
@@ -172,12 +183,12 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
 
             if($scope.msg.type == "GameReady"){
                 state.playersIframe.push(msg.source);
+                // Send update ui as soon as you receive a game ready.
+                $scope.sendUpdateUi(msg.source, state.playersInfo[state.playersIframe.length-1].playerId.toString() );
                 //Push the source for the event into the state
-                if(state.playersIframe.length==noPlayers){
-                    sharedProperties.setGameState({});
-                    $scope.sendGameState();
-                }
-            }else if($scope.msg.type == "MoveDone"){
+
+            }else if($scope.msg.type == "MoveDone") {
+                var srcIndex = findMessageSource(msg.source);
 
                 var operations =  $scope.msg.operations;
                 for (var i = 0; i < operations.length; i++) {
