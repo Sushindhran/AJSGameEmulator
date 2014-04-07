@@ -127,11 +127,7 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
     //to be modified
     $scope.send = function(source, message){
         $scope.console("Sending to Game: \n"+ JSON.stringify(message));
-<<<<<<< HEAD
         source.postMessage(JSON.parse(message),"*");
-=======
-        source.postMessage(message,"*");
->>>>>>> cb0e33617983f34b70438ad23bb3910d450775ba
     };
 
     $scope.test = function() {
@@ -328,12 +324,9 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
                                 playerIdToNoOfTokensInPot[id] = p[id];
                             }
                         }
-<<<<<<< HEAD
                     }else if(operation.type=="EndGame"){
                         //$scope.console("endGame" + JSON.stringify(operations));
 
-=======
->>>>>>> cb0e33617983f34b70438ad23bb3910d450775ba
                     }
                 }
                 sharedProperties.setGameState($scope.gameState);
@@ -344,11 +337,6 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
                 for(var i = 0; i< sharedProperties.getNumberOfPlayers(); i++){
                     $scope.sendUpdateUi(state.playersIframe[i],playersInfo[i].playerId);
                 }
-<<<<<<< HEAD
-=======
-                //$scope.sendUpdateUi(msg.source,lastMovePlayer);
-                //$scope.sendVerifyMove(msg.source, lastMovePlayer);
->>>>>>> cb0e33617983f34b70438ad23bb3910d450775ba
             }else if($scope.msg.type=="VerifyMoveDone"){
                 $scope.console("Here "+state.playersIframe.length);
                 $scope.sendUpdateUi(window, updateUIPlayerId);
