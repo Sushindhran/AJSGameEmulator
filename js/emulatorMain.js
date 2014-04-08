@@ -154,7 +154,10 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
         $scope.console("Sending to Game: \n"+ JSON.stringify(message));
         source.parent.postMessage(message,"*");
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> 22743e79734ba0e6c90c687ffc94b691a728cf39
     };
 
     $scope.test = function() {
@@ -167,9 +170,12 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
     //Function that creates the UpdateUI message and calls the send function
     $scope.sendUpdateUi =  function(source, yourPlayerId){
 <<<<<<< HEAD
+<<<<<<< HEAD
 
         var updateUIMessage = {'playersInfo': playersInfo, 'type': 'UpdateUI', 'state':getStateforPlayerId(yourPlayerId), 'lastState':lastGameState,
 =======
+=======
+>>>>>>> 22743e79734ba0e6c90c687ffc94b691a728cf39
         $scope.send(source, {'playersInfo': playersInfo, 'type': 'UpdateUI', 'state':getStateforPlayerId(yourPlayerId), 'lastState':lastGameState,
 >>>>>>> 22743e79734ba0e6c90c687ffc94b691a728cf39
             'lastMove':lastMove, 'lastMovePlayerId': lastMovePlayer.toString(), 'playerIdToNumberOfTokensInPot':playerIdToNoOfTokensInPot,
@@ -326,9 +332,15 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
 
         for(var key in object){
 <<<<<<< HEAD
+<<<<<<< HEAD
             if(object.hasOwnProperty(key)) {
                 keys.push(key);
             }
+=======
+           if(object.hasOwnProperty(key)) {
+               keys.push(key);
+           }
+>>>>>>> 22743e79734ba0e6c90c687ffc94b691a728cf39
 =======
            if(object.hasOwnProperty(key)) {
                keys.push(key);
@@ -420,8 +432,11 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
                             }
                         }
 <<<<<<< HEAD
+<<<<<<< HEAD
                     }else if(operation.type == "EndGame"){
                         $scope.console("End Game");
+=======
+>>>>>>> 22743e79734ba0e6c90c687ffc94b691a728cf39
 =======
 >>>>>>> 22743e79734ba0e6c90c687ffc94b691a728cf39
                     }
