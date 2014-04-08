@@ -198,7 +198,7 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
     //to be modified
     $scope.send = function(source, message){
         $scope.console("Sending to Game: \n"+ JSON.stringify(message));
-        source.parent.postMessage(message,"*");
+        source.postMessage(message,"*");
     };
 
     var updateUIArray = [];
@@ -364,13 +364,12 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
     // Function that finds out which player sent the message
     var findMessageSource = function(source) {
         for(var i = 0 ; i < sharedProperties.getNumberOfPlayers(); i++) {
-            //$scope.console(source+" source ");
-            if (source === state.playersIframe[i]){
+            if (source === iframeArray[i].contentWindow || source.parent === iframeArray[i].contentWindow){
                 return i;
             }
         }
+        return -1;
     };
-    var playerCount = 0;
     //Function that handles the callback and mutates the state.
     var handleCallback = function (msg) {
 
@@ -382,11 +381,10 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
             $scope.console("Receiving from Game: "+ ($scope.msg.type));
 
             if($scope.msg.type == "GameReady"){
-                state.playersIframe.push(msg.source);
-                playerCount++;
                 // Send update ui as soon as you receive a game ready.
                 $scope.gameState = {};
-                $scope.sendUpdateUi(msg.source, playersInfo[playerCount - 1].playerId);
+                var index = findMessageSource(msg.source);
+                $scope.sendUpdateUi(iframeArray[index].contentWindow,playersInfo[index].playerId);
             }else if($scope.msg.type == "MakeMove"){
                 var playerId = playersInfo[findMessageSource(msg.source)].playerId;
                 lastMovePlayer = playerId;
@@ -469,7 +467,7 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
                         }
                         flag=true;
                     }
-                    $scope.sendUpdateUi(state.playersIframe[i],playersInfo[i].playerId);
+                    $scope.sendUpdateUi(iframeArray[i].contentWindow,playersInfo[i].playerId);
                 }
             }
         });
