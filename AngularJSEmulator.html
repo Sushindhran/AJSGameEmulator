@@ -13,8 +13,12 @@
             <td id="listener" style="width: 60%" hidden>
             <div ng-controller="listenerCtrl">
                 <div align="center">
-                    <h3>Emulator Controls</h3>
+                    <h2>Emulator Controls</h2>
                     State Slider: {{min}}<input type="range" id="slider" ng-model="currentStateIndex" ng-change="change()" min="0" max="1">{{max}}
+                    <br/>
+                    <h3>Turn of Player {{currentPlayer}}</h3>
+                    <div align="right" id="timerLabel" hidden>Timer:
+                    <span id="timer"></span></div>
                 </div>
                 <ul>
                     <li ng-repeat="tab in tabs"
@@ -35,8 +39,10 @@
                 <input id="heightText" type="text" size="5" ng-model="height"><br/>
                 <label id="label4">Width</label>
                 <input id="widthText" type="text" size="5" ng-model="width"><br/>
+                <label id="label5">TimePerTurn(min)</label>
+                <input id="timePerTurn" type="text" size="2" ng-model="timePerTurn"><br/>
                 <input id="fetch" type="button" ng-click="setUrl(gameUrl)" value="Fetch"><br/>
-                <textarea hidden rows="40" cols="60" id="console" readonly></textarea><br/>
+                <textarea hidden rows="40" cols="64" id="console" readonly></textarea><br/>
             </div>
             </td>
         </tr>

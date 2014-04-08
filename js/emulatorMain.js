@@ -14,6 +14,7 @@ app.service('sharedProperties', function ($rootScope) {
     var numberOfPlayers = 2;
     var height = 500;
     var width = 500;
+    var timePerTurn = 0;
 
     //Function to display messages on the console
     var console = function(message){
@@ -78,12 +79,17 @@ app.service('sharedProperties', function ($rootScope) {
         setHeight : function(h){
             height = h;
         },
-
         getWidth : function(){
             return width;
         },
         setWidth : function(w){
             width = w;
+        },
+        getTimePerTurn : function(){
+            return timePerTurn;
+        },
+        setTimePerTurn : function(t){
+            timePerTurn = t;
         },
         broadcast: broadcast
     };
@@ -97,10 +103,11 @@ controllers.urlCtrl = function($scope, sharedProperties){
     $scope.height = sharedProperties.getHeight();
     $scope.width = sharedProperties.getWidth();
     $scope.noOfplayers = sharedProperties.getNumberOfPlayers();
+    $scope.timePerTurn = sharedProperties.getTimePerTurn();
 
     //Function to display messages on the console
     $scope.console = function(message){
-        document.getElementById("console").value += message + "\n";
+        document.getElementById("console").value += message + "\n\n";
     };
 
     $scope.createPlayersInfo = function (noOfPlayers) {
@@ -116,9 +123,10 @@ controllers.urlCtrl = function($scope, sharedProperties){
     $scope.setUrl = function (url) {
         sharedProperties.setNumberOfPlayers($scope.noOfplayers);
         $scope.createPlayersInfo($scope.noOfplayers);
-        sharedProperties.setGameUrl(url);
         sharedProperties.setHeight($scope.height);
         sharedProperties.setWidth($scope.width);
+        sharedProperties.setTimePerTurn($scope.timePerTurn);
+        sharedProperties.setGameUrl(url);
     };
 };
 
@@ -129,7 +137,7 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
     $scope.msg = {};
     $scope.gameState = {};
     $scope.visibleTo = {};
-
+    $scope.currentPlayer = 42;
     //variables for all the shared properties to be used
     var state = {playersIframe : []};
     var updateUIPlayerId = 0;
@@ -139,7 +147,7 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
     var lastGameState={};
     var lastMove=[];
     var playerIdToNoOfTokensInPot={};
-
+    var timePerTurn = 0;
     var stateArray = []; //Holds all the states the game has received till now.
     //var currentStateIndex = -1;
 
@@ -163,36 +171,6 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
         }
     };
 
-    //Function that move to the previous state
-   /* $scope.back = function(){
-        $scope.console("Called Back");
-        var updateUIArray;
-        if(currentStateIndex == -1) {
-            currentStateIndex = stateArray.length - 1;
-        }
-        currentStateIndex--;
-        if(currentStateIndex>=0) {
-            $scope.console(currentStateIndex);
-            updateUIArray = stateArray[currentStateIndex];
-            $scope.console(updateUIArray.length);
-            for (var i = 0; i < updateUIArray.length; i++) {
-                $scope.console(updateUIArray[i]);
-                $scope.send(state.playersIframe[i], updateUIArray[i]);
-            }
-        }
-    };
-
-    $scope.forward = function(){
-        $scope.console("Called Forward");
-        var updateUIArray;
-        if(currentStateIndex>=0){
-            currentStateIndex++;
-            updateUIArray = stateArray.indexOf(currentStateIndex);
-            for(var i=0;i<updateUIArray.length;i++)
-                $scope.send(state.playersIframe[i],updateUIArray[i]);
-        }
-    };*/
-
     //For the iframe tabs
     $scope.tabs = [];
     $scope.currentTab = 'Player 42';
@@ -214,7 +192,7 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
 
     //Function to display messages on the console
     $scope.console = function(message){
-        document.getElementById("console").value += message + "\n";
+        document.getElementById("console").value += message + "\n\n";
     };
 
     //to be modified
@@ -266,7 +244,19 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
         }
     };
 
-
+    var date;
+    var seconds;
+    var count = 0;
+    //Function that updates the timer for a move
+    $scope.startTimer = function(){
+        var timeLeft = (timePerTurn*60) - count;
+        count++;
+        document.getElementById("timer").innerHTML = timeLeft;
+        if(timeLeft==0){
+            count=0;
+            window.alert("Timeout");
+        }
+    };
 
     //Function that shuffles the keys and returns the shuffled set
     $scope.shuffle =  function(keys){
@@ -342,10 +332,12 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
                 document.getElementById("label2").setAttribute("hidden",true);
                 document.getElementById("label3").setAttribute("hidden",true);
                 document.getElementById("label4").setAttribute("hidden",true);
+                document.getElementById("label5").setAttribute("hidden",true);
                 document.getElementById("urlText").setAttribute("hidden",true);
                 document.getElementById("playerText").setAttribute("hidden",true);
                 document.getElementById("heightText").setAttribute("hidden",true);
                 document.getElementById("widthText").setAttribute("hidden",true);
+                document.getElementById("timePerTurn").setAttribute("hidden",true);
                 document.getElementById("fetch").setAttribute("hidden",true);
             }
             ifrm.style.width = sharedProperties.getWidth() + "px";
@@ -407,7 +399,12 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
                     var operation = operations[i];
                     //Check for all types of Operations
                     if(operation.type === "SetTurn"){
-                        // $scope.console("SetTurn");
+                        $scope.console("SetTurn");
+                        $scope.currentPlayer = operation.playerId;
+                        if(operation.numberOfSecondsForTurn!=0){
+                            $scope.console("Setting Time Per Turn to "+operation.numberOfSecondsForTurn);
+                            timePerTurn = operation.numberOfSecondsForTurn;
+                        }
                     }else if (operation.type === "Set") {
                         $scope.gameState[operation.key] = operation.value;
                         $scope.visibleTo[operation.key] = operation.visibleToPlayerIds;
@@ -460,7 +457,18 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
                 sharedProperties.setPlayerIdToNoOfTokensInPot(playerIdToNoOfTokensInPot);
                 //We are not sending verify moves right now
                 // Send update UI to everyone
+                var flag = false;
                 for(var i = 0; i< sharedProperties.getNumberOfPlayers(); i++){
+                    if(!flag){
+                        if(timePerTurn==0){
+                            document.getElementById("timerLabel").setAttribute("hidden",true);
+                        }else{
+                            document.getElementById("timerLabel").removeAttribute("hidden");
+                            $scope.console("Hereeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee");
+                            var x = setInterval(function(){$scope.startTimer()},1000);
+                        }
+                        flag=true;
+                    }
                     $scope.sendUpdateUi(state.playersIframe[i],playersInfo[i].playerId);
                 }
             }
@@ -475,6 +483,7 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
         //var source = new EventSource($scope.gameUrl);
         noPlayers = sharedProperties.getNumberOfPlayers();
         playersInfo = sharedProperties.getPlayersInfo();
+        timePerTurn = sharedProperties.getTimePerTurn();
         window.parent.addEventListener('message', handleCallback, false);
         $scope.makeFrames(noPlayers,newUrl);
     });
