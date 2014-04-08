@@ -153,14 +153,25 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
     $scope.send = function(source, message){
         $scope.console("Sending to Game: \n"+ JSON.stringify(message));
         source.parent.postMessage(message,"*");
+<<<<<<< HEAD
+=======
+    };
+
+    $scope.test = function() {
+        $scope.send(window,{"noOfPlayers":2})
+>>>>>>> 22743e79734ba0e6c90c687ffc94b691a728cf39
     };
 
     var count = 1;
     var updateUIArray = [];
     //Function that creates the UpdateUI message and calls the send function
     $scope.sendUpdateUi =  function(source, yourPlayerId){
+<<<<<<< HEAD
 
         var updateUIMessage = {'playersInfo': playersInfo, 'type': 'UpdateUI', 'state':getStateforPlayerId(yourPlayerId), 'lastState':lastGameState,
+=======
+        $scope.send(source, {'playersInfo': playersInfo, 'type': 'UpdateUI', 'state':getStateforPlayerId(yourPlayerId), 'lastState':lastGameState,
+>>>>>>> 22743e79734ba0e6c90c687ffc94b691a728cf39
             'lastMove':lastMove, 'lastMovePlayerId': lastMovePlayer.toString(), 'playerIdToNumberOfTokensInPot':playerIdToNoOfTokensInPot,
             'yourPlayerId': yourPlayerId.toString()};
         if(count<noPlayers){
@@ -314,9 +325,15 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
         var keys = [];
 
         for(var key in object){
+<<<<<<< HEAD
             if(object.hasOwnProperty(key)) {
                 keys.push(key);
             }
+=======
+           if(object.hasOwnProperty(key)) {
+               keys.push(key);
+           }
+>>>>>>> 22743e79734ba0e6c90c687ffc94b691a728cf39
         }
         return keys;
     };
@@ -402,8 +419,11 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
                                 playerIdToNoOfTokensInPot[id] = p[id];
                             }
                         }
+<<<<<<< HEAD
                     }else if(operation.type == "EndGame"){
                         $scope.console("End Game");
+=======
+>>>>>>> 22743e79734ba0e6c90c687ffc94b691a728cf39
                     }
 
                 }
