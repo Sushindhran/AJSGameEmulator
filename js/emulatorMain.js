@@ -11,7 +11,9 @@ app.service('sharedProperties', function ($rootScope) {
     state.visibleTo = {};
     state.playerIdToNoOfTokensInPot = {};
     var playersInfo = [];
-    var numberOfPlayers;
+    var numberOfPlayers = 2;
+    var height = 500;
+    var width = 500;
 
     //Function to display messages on the console
     var console = function(message){
@@ -70,7 +72,19 @@ app.service('sharedProperties', function ($rootScope) {
         setPlayersInfo : function(players){
             playersInfo = players;
         },
+        getHeight : function(){
+            return height;
+        },
+        setHeight : function(h){
+            height = h;
+        },
 
+        getWidth : function(){
+            return width;
+        },
+        setWidth : function(w){
+            width = w;
+        },
         broadcast: broadcast
     };
 });
@@ -80,6 +94,10 @@ var controllers = {};
 
 //Url controller
 controllers.urlCtrl = function($scope, sharedProperties){
+    $scope.height = sharedProperties.getHeight();
+    $scope.width = sharedProperties.getWidth();
+    $scope.noOfplayers = sharedProperties.getNumberOfPlayers();
+
     //Function to display messages on the console
     $scope.console = function(message){
         document.getElementById("console").value += message + "\n";
@@ -95,10 +113,12 @@ controllers.urlCtrl = function($scope, sharedProperties){
         sharedProperties.setPlayersInfo(list);
     };
 
-    $scope.setUrl = function (url, noOfPlayers) {
-        sharedProperties.setNumberOfPlayers(noOfPlayers);
-        $scope.createPlayersInfo(noOfPlayers);
+    $scope.setUrl = function (url) {
+        sharedProperties.setNumberOfPlayers($scope.noOfplayers);
+        $scope.createPlayersInfo($scope.noOfplayers);
         sharedProperties.setGameUrl(url);
+        sharedProperties.setHeight($scope.height);
+        sharedProperties.setWidth($scope.width);
     };
 };
 
@@ -121,12 +141,60 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
     var playerIdToNoOfTokensInPot={};
 
     var stateArray = []; //Holds all the states the game has received till now.
-    var currentStateIndex = -1;
+    //var currentStateIndex = -1;
 
     var iframeArray = [];
 
-    $scope.tabs = [];
+    //Values for the state slider
+    $scope.min = 0;
+    $scope.max = 1;
+    $scope.currentStateIndex = 0;
 
+    //Function for the state slider
+    $scope.change = function(){
+        //$scope.currentStateIndex = document.getElementById("slider").value;
+        //$scope.console("From Slider "+$scope.currentStateIndex);
+        var updateUIArr = stateArray[$scope.currentStateIndex];
+        $scope.console(updateUIArr.length);
+        stateArray.slice(0,$scope.currentStateIndex);
+        $scope.max = stateArray.length-1;
+        for (var i = 0; i < updateUIArr.length; i++) {
+            $scope.send(state.playersIframe[i], updateUIArr[i]);
+        }
+    };
+
+    //Function that move to the previous state
+   /* $scope.back = function(){
+        $scope.console("Called Back");
+        var updateUIArray;
+        if(currentStateIndex == -1) {
+            currentStateIndex = stateArray.length - 1;
+        }
+        currentStateIndex--;
+        if(currentStateIndex>=0) {
+            $scope.console(currentStateIndex);
+            updateUIArray = stateArray[currentStateIndex];
+            $scope.console(updateUIArray.length);
+            for (var i = 0; i < updateUIArray.length; i++) {
+                $scope.console(updateUIArray[i]);
+                $scope.send(state.playersIframe[i], updateUIArray[i]);
+            }
+        }
+    };
+
+    $scope.forward = function(){
+        $scope.console("Called Forward");
+        var updateUIArray;
+        if(currentStateIndex>=0){
+            currentStateIndex++;
+            updateUIArray = stateArray.indexOf(currentStateIndex);
+            for(var i=0;i<updateUIArray.length;i++)
+                $scope.send(state.playersIframe[i],updateUIArray[i]);
+        }
+    };*/
+
+    //For the iframe tabs
+    $scope.tabs = [];
     $scope.currentTab = 'Player 42';
 
     $scope.onClickTab = function (tab) {
@@ -155,8 +223,8 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
         source.parent.postMessage(message,"*");
     };
 
-    var count = 1;
     var updateUIArray = [];
+    var count = 1;
     //Function that creates the UpdateUI message and calls the send function
     $scope.sendUpdateUi =  function(source, yourPlayerId){
 
@@ -169,7 +237,11 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
         }else if(count==noPlayers){
             updateUIArray.push(updateUIMessage);
             stateArray.push(updateUIArray);
+            $scope.max++;
+            $scope.currentStateIndex=$scope.max;
+            document.getElementById("slider").setAttribute("max",$scope.max);
             count = 1;
+            updateUIArray = [];
         }
         //$scope.console("State Array "+stateArray);
         $scope.send(source, updateUIMessage);
@@ -194,35 +266,7 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
         }
     };
 
-    //Function that move to the previous state
-    $scope.back = function(){
-        $scope.console("Called Back");
-        var updateUIArray;
-        if(currentStateIndex == -1) {
-            currentStateIndex = stateArray.length - 1;
-        }
-        currentStateIndex--;
-        if(currentStateIndex>=0) {
-            $scope.console(currentStateIndex);
-            updateUIArray = stateArray[currentStateIndex];
-            $scope.console(updateUIArray.length);
-            for (var i = 0; i < updateUIArray.length; i++) {
-                $scope.console(updateUIArray[i]);
-                $scope.send(state.playersIframe[i], updateUIArray[i]);
-            }
-        }
-    };
 
-    $scope.forward = function(){
-        $scope.console("Called Forward");
-        var updateUIArray;
-        if(currentStateIndex>=0){
-            currentStateIndex++;
-            updateUIArray = stateArray.indexOf(currentStateIndex);
-            for(var i=0;i<updateUIArray.length;i++)
-                $scope.send(state.playersIframe[i],updateUIArray[i]);
-        }
-    };
 
     //Function that shuffles the keys and returns the shuffled set
     $scope.shuffle =  function(keys){
@@ -296,12 +340,16 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
             }else{
                 document.getElementById("label1").setAttribute("hidden",true);
                 document.getElementById("label2").setAttribute("hidden",true);
+                document.getElementById("label3").setAttribute("hidden",true);
+                document.getElementById("label4").setAttribute("hidden",true);
                 document.getElementById("urlText").setAttribute("hidden",true);
                 document.getElementById("playerText").setAttribute("hidden",true);
+                document.getElementById("heightText").setAttribute("hidden",true);
+                document.getElementById("widthText").setAttribute("hidden",true);
                 document.getElementById("fetch").setAttribute("hidden",true);
             }
-            ifrm.style.width = 1000 + "px";
-            ifrm.style.height = 600 + "px";
+            ifrm.style.width = sharedProperties.getWidth() + "px";
+            ifrm.style.height = sharedProperties.getHeight() + "px";
             iframeArray.push(ifrm);
             parent.insertBefore(ifrm);
         }
@@ -340,7 +388,6 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
             $scope.msg = (msg.data);
             //Display the message on the console
             $scope.console("Receiving from Game: "+ ($scope.msg.type));
-            $scope.console("json : "+ JSON.stringify($scope.msg));
 
             if($scope.msg.type == "GameReady"){
                 state.playersIframe.push(msg.source);
@@ -405,7 +452,6 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
                     }else if(operation.type == "EndGame"){
                         $scope.console("End Game");
                     }
-
                 }
 
                 sharedProperties.setGameState($scope.gameState);
@@ -423,9 +469,8 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
 
     //Listener for changes from the service
     $scope.$on('gameUrl.update',function(event,newUrl){
-        $scope.console("Receiving: "+ newUrl);
         $scope.gameUrl = newUrl;
-        $scope.console("Game URL is "+ $scope.gameUrl+ " "+ sharedProperties.getNumberOfPlayers());
+        $scope.console("Loading Game at "+ $scope.gameUrl);
         //Listen for events from the game
         //var source = new EventSource($scope.gameUrl);
         noPlayers = sharedProperties.getNumberOfPlayers();
