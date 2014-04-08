@@ -110,7 +110,7 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
     $scope.gameState = {};
     $scope.visibleTo = {};
 
-    //Get all the shared properties to be used
+    //variables for all the shared properties to be used
     var state = {playersIframe : []};
     var updateUIPlayerId = 0;
     var noPlayers;
@@ -119,6 +119,31 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
     var lastGameState={};
     var lastMove=[];
     var playerIdToNoOfTokensInPot={};
+
+    var stateArray = []; //Holds all the states the game has received till now.
+    var currentStateIndex = -1;
+
+    var iframeArray = [];
+
+    $scope.tabs = [];
+
+    $scope.currentTab = 'Player 42';
+
+    $scope.onClickTab = function (tab) {
+        $scope.currentTab = tab.title;
+        for(var i=0;i<iframeArray.length;i++) {
+            if (tab.title==iframeArray[i].getAttribute("id")){
+                iframeArray[i].removeAttribute("hidden");
+            }else{
+                iframeArray[i].setAttribute("hidden",true);
+            }
+        }
+    };
+
+    $scope.isActiveTab = function(title) {
+        return title == $scope.currentTab;
+    };
+
     //Function to display messages on the console
     $scope.console = function(message){
         document.getElementById("console").value += message + "\n";
@@ -127,19 +152,27 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
     //to be modified
     $scope.send = function(source, message){
         $scope.console("Sending to Game: \n"+ JSON.stringify(message));
-        source.postMessage(JSON.parse(message),"*");
+        source.parent.postMessage(message,"*");
     };
 
-    $scope.test = function() {
-        $scope.send(window,{"noOfPlayers":2})
-    };
-
+    var count = 1;
+    var updateUIArray = [];
+    //Function that creates the UpdateUI message and calls the send function
     $scope.sendUpdateUi =  function(source, yourPlayerId){
-        var state = sharedProperties.getState();
-        updateUIPlayerId = yourPlayerId;
-        $scope.send(source, {'playersInfo': playersInfo, 'type': 'UpdateUI', 'state':getStateforPlayerId(yourPlayerId), 'lastState':lastGameState,
+
+        var updateUIMessage = {'playersInfo': playersInfo, 'type': 'UpdateUI', 'state':getStateforPlayerId(yourPlayerId), 'lastState':lastGameState,
             'lastMove':lastMove, 'lastMovePlayerId': lastMovePlayer.toString(), 'playerIdToNumberOfTokensInPot':playerIdToNoOfTokensInPot,
-            'yourPlayerId': yourPlayerId.toString()});
+            'yourPlayerId': yourPlayerId.toString()};
+        if(count<noPlayers){
+            updateUIArray.push(updateUIMessage);
+            count++;
+        }else if(count==noPlayers){
+            updateUIArray.push(updateUIMessage);
+            stateArray.push(updateUIArray);
+            count = 1;
+        }
+        //$scope.console("State Array "+stateArray);
+        $scope.send(source, updateUIMessage);
     };
 
     $scope.sendVerifyMove = function(source,currentPlayer) {
@@ -158,6 +191,36 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
                         "lastMove": lastMove, "lastMovePlayerId": lastMovePlayer, "playerIdToNumberOfTokensInPot": playerIdToNoOfTokensInPot});
                 }
             }
+        }
+    };
+
+    //Function that move to the previous state
+    $scope.back = function(){
+        $scope.console("Called Back");
+        var updateUIArray;
+        if(currentStateIndex == -1) {
+            currentStateIndex = stateArray.length - 1;
+        }
+        currentStateIndex--;
+        if(currentStateIndex>=0) {
+            $scope.console(currentStateIndex);
+            updateUIArray = stateArray[currentStateIndex];
+            $scope.console(updateUIArray.length);
+            for (var i = 0; i < updateUIArray.length; i++) {
+                $scope.console(updateUIArray[i]);
+                $scope.send(state.playersIframe[i], updateUIArray[i]);
+            }
+        }
+    };
+
+    $scope.forward = function(){
+        $scope.console("Called Forward");
+        var updateUIArray;
+        if(currentStateIndex>=0){
+            currentStateIndex++;
+            updateUIArray = stateArray.indexOf(currentStateIndex);
+            for(var i=0;i<updateUIArray.length;i++)
+                $scope.send(state.playersIframe[i],updateUIArray[i]);
         }
     };
 
@@ -192,20 +255,24 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
     //Function to get the state for a particular playerId
     var getStateforPlayerId = function(playerId){
         var result = {};
-        var keys = getKeys($scope.gameState);
+        var state = sharedProperties.getGameState();
+        var visibleTo = sharedProperties.getVisibleTo();
+        //var keys = getKeys($scope.gameState);
+        var keys = getKeys(state);
         //$scope.console(JSON.stringify($scope.gameState));
         //$scope.console("Keys "+keys+" "+keys.length);
         for(var k=0;k<keys.length;k++){
-            var visibleToPlayers = $scope.visibleTo[keys[k]];
+            //var visibleToPlayers = $scope.visibleTo[keys[k]];
+            var visibleToPlayers = visibleTo[keys[k]];
             var value = null;
             //$scope.console(visibleToPlayers);
             if(visibleToPlayers=="ALL"){
-                value = $scope.gameState[keys[k]];
+                value = state[keys[k]];
             }
             //$scope.console(visibleToPlayers.indexOf(playerId));
             if(visibleToPlayers.indexOf(playerId)>-1){
                 //$scope.console("Here");
-                value = $scope.gameState[keys[k]];
+                value = state[keys[k]];
             }
             result[keys[k]] = value;
         }
@@ -214,17 +281,29 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
 
     //Making the frames
     $scope.makeFrames = function (noOfPlayers,url) {
-        //$scope.console("Making Iframes");
+        document.getElementById("console").removeAttribute("hidden");
+        document.getElementById("listener").removeAttribute("hidden");
         for(var i = 0; i < noOfPlayers; i++) {
-            //$scope.console(i+" is i");
-            parent = document.getElementById("frames")
+            $scope.tabs.push({
+                title: 'Player '+(i+42)
+            });
+            parent = document.getElementById("frames");
             ifrm = document.createElement("IFRAME");
             ifrm.setAttribute("src", url);
-            ifrm.setAttribute("id","frame"+i);
+            ifrm.setAttribute("id","Player "+(i+42));
+            if(i!=0){
+                ifrm.setAttribute("hidden",true);
+            }else{
+                document.getElementById("label1").setAttribute("hidden",true);
+                document.getElementById("label2").setAttribute("hidden",true);
+                document.getElementById("urlText").setAttribute("hidden",true);
+                document.getElementById("playerText").setAttribute("hidden",true);
+                document.getElementById("fetch").setAttribute("hidden",true);
+            }
             ifrm.style.width = 1000 + "px";
             ifrm.style.height = 600 + "px";
+            iframeArray.push(ifrm);
             parent.insertBefore(ifrm);
-            //state.playersIframe[i] = ifrm;
         }
     };
 
@@ -235,8 +314,9 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
         var keys = [];
 
         for(var key in object){
-            //if(object.hasOwnProperty("key"))
-            keys.push(key);
+            if(object.hasOwnProperty(key)) {
+                keys.push(key);
+            }
         }
         return keys;
     };
@@ -258,7 +338,6 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
 
             //Get the data from the JSON
             $scope.msg = (msg.data);
-            $scope.console("Here");
             //Display the message on the console
             $scope.console("Receiving from Game: "+ ($scope.msg.type));
             $scope.console("json : "+ JSON.stringify($scope.msg));
@@ -280,9 +359,9 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
                 for (var i = 0; i < operations.length; i++) {
                     var operation = operations[i];
                     //Check for all types of Operations
-                    if(operation.type == "SetTurn"){
+                    if(operation.type === "SetTurn"){
                         // $scope.console("SetTurn");
-                    }else if (operation.type == "Set") {
+                    }else if (operation.type === "Set") {
                         $scope.gameState[operation.key] = operation.value;
                         $scope.visibleTo[operation.key] = operation.visibleToPlayerIds;
                     }else if(operation.type == "SetRandomInteger"){
@@ -312,34 +391,32 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
                             $scope.gameState[toKey] = oldGameState[fromKey];
                             $scope.visibleTo[toKey] = oldVisibleTo[fromKey];
                         }
-                    }else if(operation.type == "AttemptChangeTokens"){
+                    }else if(operation.type === "AttemptChangeTokens"){
                         var p = operation.playerIdToNumberOfTokensInPot;
-                        for( var i = 0; i < sharedProperties.getNumberOfPlayers(); i++){
+                        for( var j = 0; j < sharedProperties.getNumberOfPlayers(); j++){
                             var id;
-                            id = playersInfo[i].playerId.toString();
-                            console.log("id is "+id);
+                            id = playersInfo[j].playerId.toString();
                             if(! playerIdToNoOfTokensInPot.hasOwnProperty(id) ) {
                                 playerIdToNoOfTokensInPot[id] = p[id];
                             } else if (playerIdToNoOfTokensInPot[id] == 0) {
                                 playerIdToNoOfTokensInPot[id] = p[id];
                             }
                         }
-                    }else if(operation.type=="EndGame"){
-                        //$scope.console("endGame" + JSON.stringify(operations));
-
+                    }else if(operation.type == "EndGame"){
+                        $scope.console("End Game");
                     }
+
                 }
+
                 sharedProperties.setGameState($scope.gameState);
                 sharedProperties.setVisibleTo($scope.visibleTo);
+
                 sharedProperties.setPlayerIdToNoOfTokensInPot(playerIdToNoOfTokensInPot);
                 //We are not sending verify moves right now
                 // Send update UI to everyone
                 for(var i = 0; i< sharedProperties.getNumberOfPlayers(); i++){
                     $scope.sendUpdateUi(state.playersIframe[i],playersInfo[i].playerId);
                 }
-            }else if($scope.msg.type=="VerifyMoveDone"){
-                $scope.console("Here "+state.playersIframe.length);
-                $scope.sendUpdateUi(window, updateUIPlayerId);
             }
         });
     };
