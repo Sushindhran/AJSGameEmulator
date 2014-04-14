@@ -10,6 +10,9 @@ app.service('sharedProperties', function ($rootScope) {
     state.gameState = {};
     state.visibleTo = {};
     state.playerIdToNoOfTokensInPot = {};
+    state.lastGameState = {};
+    state.lastVisibleTo = {};
+    state.lastMove = {};
     var playersInfo = [];
     var numberOfPlayers = 2;
     var height = 500;
@@ -48,6 +51,18 @@ app.service('sharedProperties', function ($rootScope) {
         },
         setGameState: function(gState){
             state.gameState = gState;
+        },
+        setLastGameState: function(lastState){
+            state.lastGameState = lastState;
+        },
+        setLastVisibleTo: function(lastVisibleTo){
+            state.lastVisibleTo = lastVisibleTo;
+        },
+        getLastGameState: function(){
+            return state.lastGameState;
+        },
+        getLastVisibleTo: function() {
+            return state.lastVisibleTo;
         },
         getVisibleTo: function(){
             return state.visibleTo;
@@ -206,9 +221,10 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
     //Function that creates the UpdateUI message and calls the send function
     $scope.sendUpdateUi =  function(source, yourPlayerId){
 
-        var updateUIMessage = {'playersInfo': playersInfo, 'type': 'UpdateUI', 'state':getStateforPlayerId(yourPlayerId), 'lastState':lastGameState,
-            'lastMove':lastMove, 'lastMovePlayerId': lastMovePlayer.toString(), 'playerIdToNumberOfTokensInPot':playerIdToNoOfTokensInPot,
-            'yourPlayerId': yourPlayerId.toString()};
+        var updateUIMessage = {'type': 'UpdateUI', 'yourPlayerId': yourPlayerId.toString(), 'playersInfo': playersInfo,  'state':getStateforPlayerId(yourPlayerId, sharedProperties.getGameState(), sharedProperties.getVisibleTo()),
+            'lastState':getStateforPlayerId(yourPlayerId,sharedProperties.getLastGameState(),sharedProperties.getLastVisibleTo()),
+            'lastMove':lastMove, 'lastMovePlayerId': lastMovePlayer.toString(), 'playerIdToNumberOfTokensInPot':playerIdToNoOfTokensInPot
+            };
         if(count<noPlayers){
             updateUIArray.push(updateUIMessage);
             count++;
@@ -237,7 +253,7 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
 
                 if(playerId-42!==x) {
                     $scope.console(playerId-42+" Send Verify Move");
-                    $scope.send(state.playersIframe[playerId-42], {"playersInfo": playersInfo, "type": "VerifyMove", "state": getStateforPlayerId(playerId), "lastState": lastGameState,
+                    $scope.send(state.playersIframe[playerId-42], {"playersInfo": playersInfo, "type": "VerifyMove", "state": getStateforPlayerId(playerId,sharedProperties.getGameState(),sharedProperties.getVisibleTo()), "lastState": lastGameState,
                         "lastMove": lastMove, "lastMovePlayerId": lastMovePlayer, "playerIdToNumberOfTokensInPot": playerIdToNoOfTokensInPot});
                 }
             }
@@ -260,7 +276,7 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
 
     //Function that shuffles the keys and returns the shuffled set
     $scope.shuffle =  function(keys){
-        var keysCopy = keys.slice();
+        var keysCopy = keys.slice(0);
         var result = [];
         while(!(keysCopy.length<1)){
             var index = Math.floor(Math.random()*keysCopy.length);
@@ -270,9 +286,9 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
         return result;
     };
 
-    //Function to copy an object
+    //Function to copy a state object
     var clone = function(obj) {
-        if (null == obj || "object" != typeof obj)
+        /*if (null == obj || "object" != typeof obj)
             return obj;
 
         // Handle Object
@@ -283,14 +299,17 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
                     copy[attr] = clone(obj[attr]);
             }
             return copy;
-        }
+        }*/
+        var str = JSON.stringify(obj)
+        var copy = JSON.parse(str);
+        return copy;
     };
 
     //Function to get the state for a particular playerId
-    var getStateforPlayerId = function(playerId){
+    var getStateforPlayerId = function(playerId, state, visibleTo){
         var result = {};
-        var state = sharedProperties.getGameState();
-        var visibleTo = sharedProperties.getVisibleTo();
+        //var state = sharedProperties.getGameState();
+        //var visibleTo = sharedProperties.getVisibleTo();
         //var keys = getKeys($scope.gameState);
         var keys = getKeys(state);
         //$scope.console(JSON.stringify($scope.gameState));
@@ -391,7 +410,8 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
                 var operations =  $scope.msg.operations;
                 //$scope.console(JSON.stringify(operations));
                 lastMove = (operations);
-                lastGameState = clone($scope.gameState);
+                var lastGameState = clone($scope.gameState);
+                var lastVisibleTo = clone($scope.visibleTo);
                 //$scope.console(JSON.stringify(lastGameState));
                 for (var i = 0; i < operations.length; i++) {
                     var operation = operations[i];
@@ -425,8 +445,8 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
                     }else if(operation.type == "Shuffle"){
                         var keys = operation.keys;
                         var shuffledKeys = $scope.shuffle(keys);
-                        var oldGameState = $scope.gameState;
-                        var oldVisibleTo = $scope.visibleTo;
+                        var oldGameState = clone($scope.gameState);
+                        var oldVisibleTo = clone($scope.visibleTo);
                         for(var j=0;j<shuffledKeys.length;j++){
                             var fromKey = keys[j];
                             var toKey = shuffledKeys[j];
@@ -448,7 +468,8 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
                         $scope.console("End Game");
                     }
                 }
-
+                sharedProperties.setLastGameState(lastGameState);
+                sharedProperties.setLastVisibleTo(lastVisibleTo);
                 sharedProperties.setGameState($scope.gameState);
                 sharedProperties.setVisibleTo($scope.visibleTo);
 
@@ -462,7 +483,6 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
                             document.getElementById("timerLabel").setAttribute("hidden",true);
                         }else{
                             document.getElementById("timerLabel").removeAttribute("hidden");
-                            $scope.console("Hereeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee");
                             var x = setInterval(function(){$scope.startTimer()},1000);
                         }
                         flag=true;
