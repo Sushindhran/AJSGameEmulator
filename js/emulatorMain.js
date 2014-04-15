@@ -6,137 +6,6 @@
  */
 var app = angular.module('ajsEmulator', ['popup.directives','editState.directives','loadState.directives','saveState.directives','sharedProperties.service']);
 
-<<<<<<< HEAD
-=======
-//Service that holds all properties shared across the controllers
-app.service('sharedProperties', function ($rootScope) {
-    var gameUrl = "";
-    var state = {playersIframe : []};
-    state.gameState = {};
-    state.visibleTo = {};
-    state.playerIdToNoOfTokensInPot = {};
-    state.lastGameState = {};
-    state.lastVisibleTo = {};
-    state.lastMove = {};
-    var playersInfo = [];
-    var numberOfPlayers = 2;
-    var height = 600;
-    var width = 800;
-    var timePerTurn = 0;
-    var viewerFlag = false;
-    var singleWindowMode = false;
-    var viewerId = -1;
-    var aiId = 0;
-
-    //Function to display messages on the console
-    var console = function(message){
-        document.getElementById("console").value += message + "\n";
-    };
-
-    //Function to broadcast changes to all controllers
-    var broadcast = function (identifier, value) {
-        console("Broadcasting "+identifier);
-        $rootScope.$broadcast(identifier, value);
-    };
-
-    return{
-        state : state,
-        getGameUrl: function () {
-            return gameUrl;
-        },
-        setGameUrl: function(value) {
-            gameUrl = value;
-            //Call the function to broadcast the game Url
-            broadcast('gameUrl.update',gameUrl);
-        },
-        getState: function(){
-            return state;
-        },
-        setState: function(st){
-            state = st;
-        },
-        getGameState: function(){
-            return state.gameState;
-        },
-        setGameState: function(gState){
-            state.gameState = gState;
-        },
-        setLastGameState: function(lastState){
-            state.lastGameState = lastState;
-        },
-        setLastVisibleTo: function(lastVisibleTo){
-            state.lastVisibleTo = lastVisibleTo;
-        },
-        getLastGameState: function(){
-            return state.lastGameState;
-        },
-        getLastVisibleTo: function() {
-            return state.lastVisibleTo;
-        },
-        getVisibleTo: function(){
-            return state.visibleTo;
-        },
-        setVisibleTo: function(visible){
-            state.visibleTo = visible;
-        },
-        setPlayerIdToNoOfTokensInPot : function(playerIdTokenMap){
-            state.playerIdToNoOfTokensInPot = playerIdTokenMap;
-        },
-        getPlayerIdToNoOfTokensInPot : function(){
-            return state.playerIdToNoOfTokensInPot;
-        },
-        getNumberOfPlayers: function(){
-            return numberOfPlayers;
-        },
-        setNumberOfPlayers: function(noPlayers){
-            numberOfPlayers = noPlayers;
-        },
-        getPlayersInfo: function(){
-            return playersInfo;
-        },
-        setPlayersInfo : function(players){
-            playersInfo = players;
-        },
-        getHeight : function(){
-            return height;
-        },
-        setHeight : function(h){
-            height = h;
-        },
-        getWidth : function(){
-            return width;
-        },
-        setWidth : function(w){
-            width = w;
-        },
-        getTimePerTurn : function(){
-            return timePerTurn;
-        },
-        setTimePerTurn : function(t){
-            timePerTurn = t;
-        },
-        isViewerEnabled : function() {
-            return viewerFlag;
-        },
-        getViewerFlag : function(){
-            return viewerFlag
-        },
-        setViewerEnabled : function(viewer) {
-            viewerFlag = viewer;
-        },
-        isSingleWindowMode : function() {
-            return singleWindowMode.checked;
-        },
-        setSingleWindowMode : function(inp) {
-            singleWindowMode  = inp;
-        },
-        getViewerId: function(){
-            return viewerId;
-        },
-        broadcast: broadcast
-    };
-});
->>>>>>> 01411be3182ced43675dffd4c67bcd0eee6cbeb9
 
 //Holds all the controllers used
 var controllers = {};
@@ -287,13 +156,6 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
             'lastState':{},'lastMove':lastMove, 'lastMovePlayerId': lastMovePlayer.toString(), 'playerIdToNumberOfTokensInPot':playerIdToNoOfTokensInPot
         };
 
-<<<<<<< HEAD
-=======
-        var updateUIMessage = {'type': 'UpdateUI', 'yourPlayerId': yourPlayerId.toString(), 'playersInfo': playersInfo,  'state':getStateforPlayerId(yourPlayerId, sharedProperties.getGameState(), sharedProperties.getVisibleTo()),
-            'lastState':getStateforPlayerId(yourPlayerId,sharedProperties.getLastGameState(),sharedProperties.getLastVisibleTo()),
-            'lastMove':lastMove, 'lastMovePlayerId': lastMovePlayer.toString(), 'playerIdToNumberOfTokensInPot':playerIdToNoOfTokensInPot
-            };
->>>>>>> 01411be3182ced43675dffd4c67bcd0eee6cbeb9
         if(count<noPlayers){
             updateUIArray.push(lastMovePlayer);
             updateUIArray.push(updateUIMessage);
@@ -373,10 +235,7 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
 
     //Function to copy a state object
     var clone = function(obj) {
-<<<<<<< HEAD
 
-=======
->>>>>>> 01411be3182ced43675dffd4c67bcd0eee6cbeb9
         var str = JSON.stringify(obj)
         var copy = JSON.parse(str);
         return copy;
@@ -385,12 +244,6 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
     //Function to get the state for a particular playerId
     var getStateforPlayerId = function(playerId, state, visibleTo){
         var result = {};
-<<<<<<< HEAD
-=======
-        //var state = sharedProperties.getGameState();
-        //var visibleTo = sharedProperties.getVisibleTo();
-        //var keys = getKeys($scope.gameState);
->>>>>>> 01411be3182ced43675dffd4c67bcd0eee6cbeb9
         var keys = getKeys(state);
         for(var k=0;k<keys.length;k++){
             var visibleToPlayers = visibleTo[keys[k]];
@@ -427,7 +280,6 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
 
         document.getElementById("console").removeAttribute("hidden");
         document.getElementById("listener").removeAttribute("hidden");
-<<<<<<< HEAD
         document.getElementById("console").removeAttribute("hidden");
         document.getElementById("listener").removeAttribute("hidden");
         // Create frames equal to number of players
@@ -464,40 +316,6 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
             $scope.tabs.push({title: "Viewer"})
         }
         sharedProperties.setFrames(iframeArray);
-=======
-            // Create frames equal to number of players
-            for (var i = 0; i < noOfPlayers; i++) {
-                $scope.tabs.push({
-                    title: 'Player ' + (i + 42)
-                });
-                parent = document.getElementById("frames");
-                ifrm = document.createElement("IFRAME");
-                ifrm.setAttribute("src", url);
-                ifrm.setAttribute("id", "Player " + (i + 42));
-
-                if (i != 0) {
-                    ifrm.setAttribute("hidden", true);
-                }
-                ifrm.style.width = sharedProperties.getWidth() + "px";
-                ifrm.style.height = sharedProperties.getHeight() + "px";
-                iframeArray.push(ifrm);
-                parent.insertBefore(ifrm);
-            }
-            // Set up viewer tab if viewer is enabled
-            if (sharedProperties.isViewerEnabled()) {
-                parent = document.getElementById("frames");
-                ifrm = document.createElement("IFRAME");
-                ifrm.setAttribute("src", url);
-                ifrm.setAttribute("id", "Viewer");
-                ifrm.setAttribute("hidden", true);
-                ifrm.style.width = sharedProperties.getWidth() + "px";
-                ifrm.style.height = sharedProperties.getHeight() + "px";
-                iframeArray.push(ifrm);
-                parent.insertBefore(ifrm);
-                $scope.tabs.push({title: "Viewer"})
-            }
-
->>>>>>> 01411be3182ced43675dffd4c67bcd0eee6cbeb9
     };
 
     //Function to get the keys from a JSON object
@@ -629,11 +447,6 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
                         $scope.console("End Game" + JSON.stringify(msg.data));
                     }
                 }
-<<<<<<< HEAD
-=======
-                sharedProperties.setLastGameState(lastGameState);
-                sharedProperties.setLastVisibleTo(lastVisibleTo);
->>>>>>> 01411be3182ced43675dffd4c67bcd0eee6cbeb9
                 sharedProperties.setGameState($scope.gameState);
                 sharedProperties.setVisibleTo($scope.visibleTo);
                 sharedProperties.setPlayerIdToNoOfTokensInPot(playerIdToNoOfTokensInPot);
@@ -643,7 +456,6 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
                 // Send update UI to everyone
 
                 for(var i = 0; i< sharedProperties.getNumberOfPlayers(); i++){
-<<<<<<< HEAD
                     $scope.sendUpdateUi(iframeArray[i].contentWindow,playersInfo[i].playerId);
                 }
 
@@ -651,23 +463,6 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
                 if(sharedProperties.isViewerEnabled()){
                     $scope.sendUpdateUi(iframeArray[iframeArray.length-1].contentWindow, -1);
                 }
-=======
-                    if(!flag){
-                        if(timePerTurn==0){
-                            document.getElementById("timerLabel").setAttribute("hidden",true);
-                        }else{
-                            document.getElementById("timerLabel").removeAttribute("hidden");
-                            var x = setInterval(function(){$scope.startTimer()},1000);
-                        }
-                        flag=true;
-                    }
-                    $scope.sendUpdateUi(iframeArray[i].contentWindow,playersInfo[i].playerId);
-                }
-               // Send Update UI to viewer too if it is enabled
-               if(sharedProperties.isViewerEnabled()){
-                   $scope.sendUpdateUi(iframeArray[iframeArray.length-1].contentWindow, -1);
-               }
->>>>>>> 01411be3182ced43675dffd4c67bcd0eee6cbeb9
             }
         });
     };
