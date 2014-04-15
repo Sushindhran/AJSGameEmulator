@@ -41,7 +41,12 @@
                 <input id="widthText" type="text" size="5" ng-model="width"><br/>
                 <label id="label5">TimePerTurn(min)</label>
                 <input id="timePerTurn" type="text" size="2" ng-model="timePerTurn"><br/>
+                <label id="label6">Simulate with viewer</label>
+                <input id ="viewer" type="checkbox" ng-model="viewerFlag"><br/>
+                <label id="label7">Single window mode</label>
+                <input id ="singleWindow" type="checkbox" ng-model="singleWindowMode"><br/>
                 <input id="fetch" type="button" ng-click="setUrl(gameUrl)" value="Fetch"><br/>
+
                 <textarea hidden rows="40" cols="64" id="console" readonly></textarea><br/>
             </div>
             </td>

@@ -15,9 +15,13 @@ app.service('sharedProperties', function ($rootScope) {
     state.lastMove = {};
     var playersInfo = [];
     var numberOfPlayers = 2;
-    var height = 500;
-    var width = 500;
+    var height = 600;
+    var width = 800;
     var timePerTurn = 0;
+    var viewerFlag = false;
+    var singleWindowMode = false;
+    var viewerId = -1;
+    var aiId = 0;
 
     //Function to display messages on the console
     var console = function(message){
@@ -106,6 +110,24 @@ app.service('sharedProperties', function ($rootScope) {
         setTimePerTurn : function(t){
             timePerTurn = t;
         },
+        isViewerEnabled : function() {
+            return viewerFlag;
+        },
+        getViewerFlag : function(){
+            return viewerFlag
+        },
+        setViewerEnabled : function(viewer) {
+            viewerFlag = viewer;
+        },
+        isSingleWindowMode : function() {
+            return singleWindowMode.checked;
+        },
+        setSingleWindowMode : function(inp) {
+            singleWindowMode  = inp;
+        },
+        getViewerId: function(){
+            return viewerId;
+        },
         broadcast: broadcast
     };
 });
@@ -119,6 +141,8 @@ controllers.urlCtrl = function($scope, sharedProperties){
     $scope.width = sharedProperties.getWidth();
     $scope.noOfplayers = sharedProperties.getNumberOfPlayers();
     $scope.timePerTurn = sharedProperties.getTimePerTurn();
+    $scope.viewerFlag = sharedProperties.getViewerFlag();
+    $scope.singleWindowMode = sharedProperties.isSingleWindowMode();
 
     //Function to display messages on the console
     $scope.console = function(message){
@@ -141,6 +165,8 @@ controllers.urlCtrl = function($scope, sharedProperties){
         sharedProperties.setHeight($scope.height);
         sharedProperties.setWidth($scope.width);
         sharedProperties.setTimePerTurn($scope.timePerTurn);
+        sharedProperties.setViewerEnabled($scope.viewerFlag);
+        sharedProperties.setSingleWindowMode($scope.singleWindowMode);
         sharedProperties.setGameUrl(url);
     };
 };
@@ -288,18 +314,6 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
 
     //Function to copy a state object
     var clone = function(obj) {
-        /*if (null == obj || "object" != typeof obj)
-            return obj;
-
-        // Handle Object
-        if (obj instanceof Object) {
-            var copy = {};
-            for (var attr in obj) {
-                if (obj.hasOwnProperty(attr))
-                    copy[attr] = clone(obj[attr]);
-            }
-            return copy;
-        }*/
         var str = JSON.stringify(obj)
         var copy = JSON.parse(str);
         return copy;
@@ -334,36 +348,57 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
 
     //Making the frames
     $scope.makeFrames = function (noOfPlayers,url) {
+        //Hide dom elements
+        document.getElementById("label1").setAttribute("hidden", true);
+        document.getElementById("label2").setAttribute("hidden", true);
+        document.getElementById("label3").setAttribute("hidden", true);
+        document.getElementById("label4").setAttribute("hidden", true);
+        document.getElementById("label5").setAttribute("hidden", true);
+        document.getElementById("label6").setAttribute("hidden", true);
+        document.getElementById("label7").setAttribute("hidden", true)
+        document.getElementById("urlText").setAttribute("hidden", true);
+        document.getElementById("playerText").setAttribute("hidden", true);
+        document.getElementById("heightText").setAttribute("hidden", true);
+        document.getElementById("widthText").setAttribute("hidden", true);
+        document.getElementById("timePerTurn").setAttribute("hidden", true);
+        document.getElementById("singleWindow").setAttribute("hidden", true);
+        document.getElementById("viewer").setAttribute("hidden", true);
+        document.getElementById("fetch").setAttribute("hidden", true);
+
         document.getElementById("console").removeAttribute("hidden");
         document.getElementById("listener").removeAttribute("hidden");
-        for(var i = 0; i < noOfPlayers; i++) {
-            $scope.tabs.push({
-                title: 'Player '+(i+42)
-            });
-            parent = document.getElementById("frames");
-            ifrm = document.createElement("IFRAME");
-            ifrm.setAttribute("src", url);
-            ifrm.setAttribute("id","Player "+(i+42));
-            if(i!=0){
-                ifrm.setAttribute("hidden",true);
-            }else{
-                document.getElementById("label1").setAttribute("hidden",true);
-                document.getElementById("label2").setAttribute("hidden",true);
-                document.getElementById("label3").setAttribute("hidden",true);
-                document.getElementById("label4").setAttribute("hidden",true);
-                document.getElementById("label5").setAttribute("hidden",true);
-                document.getElementById("urlText").setAttribute("hidden",true);
-                document.getElementById("playerText").setAttribute("hidden",true);
-                document.getElementById("heightText").setAttribute("hidden",true);
-                document.getElementById("widthText").setAttribute("hidden",true);
-                document.getElementById("timePerTurn").setAttribute("hidden",true);
-                document.getElementById("fetch").setAttribute("hidden",true);
+            // Create frames equal to number of players
+            for (var i = 0; i < noOfPlayers; i++) {
+                $scope.tabs.push({
+                    title: 'Player ' + (i + 42)
+                });
+                parent = document.getElementById("frames");
+                ifrm = document.createElement("IFRAME");
+                ifrm.setAttribute("src", url);
+                ifrm.setAttribute("id", "Player " + (i + 42));
+
+                if (i != 0) {
+                    ifrm.setAttribute("hidden", true);
+                }
+                ifrm.style.width = sharedProperties.getWidth() + "px";
+                ifrm.style.height = sharedProperties.getHeight() + "px";
+                iframeArray.push(ifrm);
+                parent.insertBefore(ifrm);
             }
-            ifrm.style.width = sharedProperties.getWidth() + "px";
-            ifrm.style.height = sharedProperties.getHeight() + "px";
-            iframeArray.push(ifrm);
-            parent.insertBefore(ifrm);
-        }
+            // Set up viewer tab if viewer is enabled
+            if (sharedProperties.isViewerEnabled()) {
+                parent = document.getElementById("frames");
+                ifrm = document.createElement("IFRAME");
+                ifrm.setAttribute("src", url);
+                ifrm.setAttribute("id", "Viewer");
+                ifrm.setAttribute("hidden", true);
+                ifrm.style.width = sharedProperties.getWidth() + "px";
+                ifrm.style.height = sharedProperties.getHeight() + "px";
+                iframeArray.push(ifrm);
+                parent.insertBefore(ifrm);
+                $scope.tabs.push({title: "Viewer"})
+            }
+
     };
 
     //Function to get the keys from a JSON object
@@ -382,7 +417,7 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
 
     // Function that finds out which player sent the message
     var findMessageSource = function(source) {
-        for(var i = 0 ; i < sharedProperties.getNumberOfPlayers(); i++) {
+        for(var i = 0 ; i < iframeArray.length; i++) {
             if (source === iframeArray[i].contentWindow || source.parent === iframeArray[i].contentWindow){
                 return i;
             }
@@ -403,7 +438,11 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
                 // Send update ui as soon as you receive a game ready.
                 $scope.gameState = {};
                 var index = findMessageSource(msg.source);
-                $scope.sendUpdateUi(iframeArray[index].contentWindow,playersInfo[index].playerId);
+                if(sharedProperties.isViewerEnabled() && index == iframeArray.length-1){
+                    $scope.sendUpdateUi(iframeArray[index].contentWindow, sharedProperties.getViewerId());
+                }else {
+                    $scope.sendUpdateUi(iframeArray[index].contentWindow, playersInfo[index].playerId);
+                }
             }else if($scope.msg.type == "MakeMove"){
                 var playerId = playersInfo[findMessageSource(msg.source)].playerId;
                 lastMovePlayer = playerId;
@@ -489,6 +528,10 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
                     }
                     $scope.sendUpdateUi(iframeArray[i].contentWindow,playersInfo[i].playerId);
                 }
+               // Send Update UI to viewer too if it is enabled
+               if(sharedProperties.isViewerEnabled()){
+                   $scope.sendUpdateUi(iframeArray[iframeArray.length-1].contentWindow, -1);
+               }
             }
         });
     };
