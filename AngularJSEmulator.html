@@ -1,8 +1,13 @@
 <!doctype html>
 <html ng-app="ajsEmulator">
 <head>
-    <script data-require="angular.js@1.0.x" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.8/angular.min.js" data-semver="1.0.8"></script>
+    <link rel="stylesheet" href="css/popup.css"/>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.0-rc.2/angular.min.js" data-semver="1.0.8"></script>
+    <script src="js/directives.js"></script>
+    <script src="js/services.js"></script>
     <script src="js/emulatorMain.js"></script>
+
     <link rel="stylesheet" type="text/css" href="css/emulatorStyles.css">
     <title>AngularJS Emulator</title>
 </head>
@@ -12,14 +17,26 @@
         <tr>
             <td id="listener" style="width: 60%" hidden>
             <div ng-controller="listenerCtrl">
+                <h2 align="center">Emulator Controls</h2>
                 <div align="center">
-                    <h2>Emulator Controls</h2>
-                    State Slider: {{min}}<input type="range" id="slider" ng-model="currentStateIndex" ng-change="change()" min="0" max="1">{{max}}
+                    <b>State Slider: </b>{{min}}<input type="range" id="slider" ng-model="currentStateIndex" ng-change="change()" min="0" max="1" list="tickmarks">{{max}}&nbsp;&NonBreakingSpace;
+                    <input type="button" value="Edit State" popup edit>
+                    <input type="button" value="Save State" popup save>
+                    <input type="button" value="Load State" popup load>
+                    <datalist id=tickmarks>
+                        <option>0</option>
+                        <option></option>
+                        <option>40</option>
+                        <option>60</option>
+                        <option></option>
+                        <option>{{max}}</option>
+                    </datalist>
                     <br/>
-                    <h3>Turn of Player {{currentPlayer}}</h3>
+
                     <div align="right" id="timerLabel" hidden>Timer:
                     <span id="timer"></span></div>
                 </div>
+                <h3 align="center">Turn of Player {{currentPlayer}}</h3>
                 <ul>
                     <li ng-repeat="tab in tabs"
                         ng-class="{active:isActiveTab(tab.title)}"
@@ -41,6 +58,10 @@
                 <input id="widthText" type="text" size="5" ng-model="width"><br/>
                 <label id="label5">TimePerTurn(min)</label>
                 <input id="timePerTurn" type="text" size="2" ng-model="timePerTurn"><br/>
+                <label id="label6">Simulate with viewer</label>
+                <input id ="viewer" type="checkbox" ng-model="viewerFlag"><br/>
+                <label id="label7">Single window mode</label>
+                <input id ="singleWindow" type="checkbox" ng-model="singleWindowMode"><br/>
                 <input id="fetch" type="button" ng-click="setUrl(gameUrl)" value="Fetch"><br/>
                 <textarea hidden rows="40" cols="64" id="console" readonly></textarea><br/>
             </div>
