@@ -4,7 +4,7 @@
  * Shwetank
  * on 22/03/14.
  */
-var app = angular.module('ajsEmulator', ['popup.directives','editState.directives','loadState.directives','saveState.directives','sharedProperties.service']);
+var app = angular.module('ajsEmulator', ['popup.directives','editState.directives','mobileState.directives','loadState.directives','saveState.directives','sharedProperties.service']);
 
 
 //Holds all the controllers used
@@ -18,10 +18,28 @@ controllers.urlCtrl = function($scope, sharedProperties){
     $scope.timePerTurn = sharedProperties.getTimePerTurn();
     $scope.viewerFlag = sharedProperties.getViewerFlag();
     $scope.singleWindowMode = sharedProperties.isSingleWindowMode();
+    $scope.consoleVal;
+
+    $scope.$on('$viewContentLoaded', function(){
+        $scope.console("Checking browser is mobile: "+isMobile);
+        var isMobile = $scope.dectectMob();
+        sharedProperties.setMobile(isMobile);
+    });
+
+    $scope.dectectMob = function() {
+
+        if(window.innerWidth <= 384 && window.innerHeight <= 640) {
+            return true;
+        } else {
+            return false;
+        }
+    };
 
     //Function to display messages on the console
     $scope.console = function(message){
         document.getElementById("console").value += message + "\n\n";
+        $scope.consoleVal = document.getElementById("console").value;
+        sharedProperties.setConsoleVal($scope.consoleVal);
     };
 
     $scope.createPlayersInfo = function (noOfPlayers) {
@@ -35,6 +53,9 @@ controllers.urlCtrl = function($scope, sharedProperties){
     };
 
     $scope.setUrl = function (url) {
+        var isMobile = $scope.dectectMob();
+        $scope.console("Checking browser is mobile "+isMobile);
+        sharedProperties.setMobile(isMobile);
         sharedProperties.setNumberOfPlayers($scope.noOfplayers);
         $scope.createPlayersInfo($scope.noOfplayers);
         sharedProperties.setHeight($scope.height);
@@ -71,7 +92,7 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
     var iframeArray = [];
     var interval;
     var playerId = 42;
-
+    $scope.consoleVal;
     //Values for the state slider
     $scope.min = 0;
     $scope.max = 1;
@@ -140,6 +161,8 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
     //Function to display messages on the console
     $scope.console = function(message){
         document.getElementById("console").value += message + "\n\n";
+        $scope.consoleVal = document.getElementById("console").value;
+        sharedProperties.setConsoleVal($scope.consoleVal);
     };
 
     //to be modified
@@ -278,9 +301,10 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
         document.getElementById("viewer").setAttribute("hidden", true);
         document.getElementById("fetch").setAttribute("hidden", true);
 
-        document.getElementById("console").removeAttribute("hidden");
-        document.getElementById("listener").removeAttribute("hidden");
-        document.getElementById("console").removeAttribute("hidden");
+
+
+        document.getElementById("consoleButton").removeAttribute("hidden");
+
         document.getElementById("listener").removeAttribute("hidden");
         // Create frames equal to number of players
         for (var i = 0; i < noOfPlayers; i++) {
@@ -295,8 +319,13 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
             if (i != 0) {
                 ifrm.setAttribute("hidden", true);
             }
-            ifrm.style.width = sharedProperties.getWidth() + "px";
-            ifrm.style.height = sharedProperties.getHeight() + "px";
+            if(sharedProperties.isMobile()){
+                ifrm.style.width = "100%";
+                ifrm.style.height = "100%";
+            }else{
+                ifrm.style.width = sharedProperties.getWidth() + "px";
+                ifrm.style.height = sharedProperties.getHeight() + "px";
+            }
             iframeArray.push(ifrm);
             parent.insertBefore(ifrm);
         }
@@ -309,8 +338,13 @@ controllers.listenerCtrl = function ($scope, sharedProperties) {
             ifrm.setAttribute("src", url);
             ifrm.setAttribute("id", "Viewer");
             ifrm.setAttribute("hidden", true);
-            ifrm.style.width = sharedProperties.getWidth() + "px";
-            ifrm.style.height = sharedProperties.getHeight() + "px";
+            if(sharedProperties.isMobile()){
+                ifrm.style.width = "100%";
+                ifrm.style.height = "100%";
+            }else{
+                ifrm.style.width = sharedProperties.getWidth() + "px";
+                ifrm.style.height = sharedProperties.getHeight() + "px";
+            }
             iframeArray.push(ifrm);
             parent.insertBefore(ifrm);
             $scope.tabs.push({title: "Viewer"})
@@ -495,17 +529,24 @@ controllers.stateCtrl = function($scope, sharedProperties){
     $scope.lastMove=[];
     $scope.updateUIMessage = {};
     $scope.vis = sharedProperties.getVisibleTo;
+    $scope.consoleVal = "Hello";
     var playerId = 0;
     var lastMovePlayer = 0;
 
     //Function to display messages on the console
     $scope.console = function(message){
         document.getElementById("console").value += message + "\n\n";
+        $scope.consoleVal = document.getElementById("console").value;
+        sharedProperties.setConsoleVal($scope.consoleVal);
     };
 
     $scope.$on('gameState.update',function(event,state){
         //$scope.console("Game State Update");
         $scope.currentState = state;
+    });
+
+    $scope.$on('console.update',function(event,cons){
+        $scope.consoleVal = cons;
     });
 
     $scope.$on('stateSeq.update',function(event,seq){

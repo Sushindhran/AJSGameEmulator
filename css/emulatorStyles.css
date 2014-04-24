@@ -1,8 +1,25 @@
+#listener{
+    align-content: center;
+}
+
+#url{
+    float: left;
+    position: relative;
+    top: 20%;
+    left: 40%;
+}
+
 ul {
     list-style: none;
     padding: 0;
     margin: 0;
 }
+
+body{
+    background-color: #696969;
+    font-size: 20px;
+}
+
 li {
     float: left;
     border: 1px solid #000;
@@ -12,6 +29,7 @@ li {
     background-color: #CCC;
     color: #696969;
 }
+
 #frames {
     border: 1px solid black;
     clear: both;
@@ -20,4 +38,21 @@ li {
 .active {
     background-color: #FFF;
     color: #000;
+}
+
+label{
+
+    position: relative;
+
+}
+
+.inputs{
+    position: absolute;
+    left: 100%;
+}
+
+.fetch{
+    position:relative;
+    top:20px;
+    left: 5px;
 }

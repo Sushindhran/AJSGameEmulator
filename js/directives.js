@@ -131,7 +131,6 @@ angular.module('editState.directives', [])
             restrict: 'A',
             link: function(scope, element, attrs) {
                 $(element).attr("directive", "edit-state");
-                //$(element).addClass("password-input");
             }
         }
     }])
@@ -180,7 +179,7 @@ angular.module('saveState.directives', [])
             restrict: 'A',
             link: function(scope, element, attrs) {
                 $(element).attr("directive", "save-state");
-                //$(element).addClass("password-input");
+
             }
         }
     }])
@@ -192,6 +191,30 @@ angular.module('saveState.directives', [])
             scope: {},
             link: function(scope, element) {
                 scope.closeSaveState = function($event) {
+                    scope.$emit("CLOSE_POPUP");
+                }
+            }
+        }
+    }]);
+
+angular.module('mobileState.directives', [])
+    .directive('mobile',[function(){
+        return{
+            restrict: 'A',
+            link: function(scope, element, attrs) {
+                $(element).attr("directive", "mobile-state");
+                //$(element).addClass("password-input");
+            }
+        }
+    }])
+    .directive('mobileState', [function() {
+        return {
+            restrict: 'E',
+            templateUrl: 'mobile-state.html',
+            replace: true,
+            scope: {},
+            link: function(scope, element) {
+                scope.closeConsole = function($event) {
                     scope.$emit("CLOSE_POPUP");
                 }
             }

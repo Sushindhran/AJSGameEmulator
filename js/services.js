@@ -22,6 +22,8 @@ angular.module('sharedProperties.service',[])
     var singleWindowMode = false;
     var viewerId = -1;
     var aiId = 0;
+    var isMobile = false;
+    var consoleVal;
 
     //Function to display messages on the console
     var console = function(message){
@@ -150,6 +152,19 @@ angular.module('sharedProperties.service',[])
         },
         getViewerId: function(){
             return viewerId;
+        },
+        setMobile:function(mob){
+            isMobile = mob;
+        },
+        isMobile : function(){
+            return isMobile;
+        },
+        setConsoleVal : function(console){
+            consoleVal = console;
+            broadcast('console.update',consoleVal);
+        },
+        getConsoleVal : function(){
+            return consoleVal;
         },
         broadcast: broadcast
     };
