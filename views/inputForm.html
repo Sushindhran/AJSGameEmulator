@@ -1,0 +1,29 @@
+<div>
+    <form>
+        <label class="fieldLabel"> URL</label>
+        <input type="text" ng-model="gameUrl" placeholder="Game Url"><br/>
+        <label class="fieldLabel"> No of Players </label>
+        <input type="text" ng-model="numberOfPlayers" ng-change="playerTokenSetup()"><br/>
+        <label class="fieldLabel" style="display : inline"> Player Tokens </label>
+        <span>
+            <span ng-repeat="n in [] | range:numberOfPlayers">
+               <label>P{{$index+1}}</label><input type="text" ng-model="playerTokens[$index]" >
+            </span>
+        </span></br>
+        <label class="fieldLabel"> Width </label>
+        <input type="text" ng-model="width" placeholder="optional"><br/>
+        <label class="fieldLabel"> Height </label>
+        <input type="text" ng-model="height" placeholder="optional"><br/>
+        <label class="fieldLabel">Time per Turn</label>
+        <input type="text" ng-model="timePerTurn" placeholder="optional"><br/>
+        <label class="fieldLabel"> Enable Viewer</label>
+        <input type="checkbox" ng-model="isViewerEnabled"><br/>
+        <label class="fieldLabel"> Single Window Mode </label>
+        <input type="checkbox" ng-model="isSingleWindowMode"><br/>
+
+
+        <input type="submit" ng-click="setup()" value="Emulate" >
+    </form>
+
+    <!-- input type="button" ng-click="log()" value="log values"-->
+</div>

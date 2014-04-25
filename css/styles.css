@@ -1,0 +1,16 @@
+.fieldLabel{
+    display: inline-block;
+    float: left;
+    clear: left;
+    width: 150px;
+    text-align: left;
+}
+
+input{
+    align: left;
+    display: inline-block;
+}
+
+form{
+
+}
