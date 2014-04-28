@@ -31,9 +31,13 @@ angular.module('emulator').factory('gameDataFactory',function () {
         /*
         * Data needed to emulate
          */
-        absoluteState : '',
+        gameState : '',
+        visibleTo: '',
         iframeArray : '',
-        playersInfo : ''
+        playersInfo : [],
+        lastGameState : {},
+        lastMove : [],
+        lastMovePlayerId:''
 
     };
 
@@ -59,6 +63,14 @@ angular.module('emulator').factory('gameDataFactory',function () {
 
     factory.getDefaultSetupParameters = function() {
         return defaultSetupParameters;
+    }
+
+    factory.setgameDataProperty = function (key,value) {
+        gameData[key] = value;
+    }
+
+    factory.getGameDataProperty = function(key) {
+        return gameData[key];
     }
 
     return factory;

@@ -1,3 +1,29 @@
-<div>
-I am empty
+<div data-ng-init="init()">
+    <button data-ng-click="reload()">Reload Emulator</button>
+
+    <div id="playerSwitchbuttons">
+        <ul>
+            <li class="tabs"  data-ng-if="!isSingleWindowMode" data-ng-repeat="n in [] | range:numberOfPlayers" data-ng-click="switchTabs($index)">Player {{playersInfo[$index].playerId}} </li>
+            <li class="tabs"  data-ng-if="isSingleWindowMode" >Player {{turnOfPlayer}} </li>
+            <li class="tabs"  ng-if="isViewerEnabled" data-ng-click="switchTabs('viewer')">Viewer</li>
+
+        </ul>
+    </div>
+    <!-- frames for multiple iframes-->
+    <div id="multiFrames" data-ng-if="!isSingleWindowMode">
+        <ajs-iframe-directive class="frame" data-ng-repeat="n in [] | range:numberOfPlayers"></ajs-iframe-directive>
+    </div>
+
+    <!-- frame for pass and play, single window mode-->
+    <div id="singleWindow" ng-if="isSingleWindowMode">
+        <ajs-iframe-directive class="frame"></ajs-iframe-directive>
+    </div>
+
+    <!--frame for viewer-->
+    <div id="viewerFrame" ng-if="isViewerEnabled">
+        <ajs-iframe-directive class="frame" ></ajs-iframe-directive>
+    </div>
+
+    <!--Console-->
+    <textarea id="game-console" rows="40" cols="64" readonly ></textarea>
 </div>

@@ -77,7 +77,7 @@ angular.module("emulator").controller('FormController',function ($scope, $locati
             $scope.width, $scope.height, parseInt($scope.timePerTurn),
             $scope.isViewerEnabled, $scope.isSingleWindowMode, $scope.playerTokens);
 
-        $location.path('/emulate');
+        $location.path('emulate');
     }
 
     /*
