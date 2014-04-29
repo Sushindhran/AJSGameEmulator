@@ -31,13 +31,12 @@ angular.module('emulator').factory('gameDataFactory',function () {
         /*
         * Data needed to emulate
          */
-        gameState : '',
-        visibleTo: '',
-        iframeArray : '',
+        gameState : {},
+        visibleTo: {},
         playersInfo : [],
         lastGameState : {},
         lastMove : [],
-        lastMovePlayerId:''
+        lastMovePlayerId:"0"
 
     };
 
