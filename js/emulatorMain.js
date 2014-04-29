@@ -4,7 +4,8 @@
  * Shwetank
  * on 22/03/14.
  */
-var app = angular.module('ajsEmulator', ['popup.directives','editState.directives','mobileState.directives','loadState.directives','saveState.directives','sharedProperties.service']);
+var app = angular.module('ajsEmulator', ['pascalprecht.translate','popup.directives','editState.directives','mobileState.directives','loadState.directives','saveState.directives','sharedProperties.service']);
+
 
 
 //Holds all the controllers used
