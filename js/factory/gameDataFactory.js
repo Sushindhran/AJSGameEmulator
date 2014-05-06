@@ -36,7 +36,8 @@ angular.module('emulator').factory('gameDataFactory',function () {
         playersInfo : [],
         lastGameState : {},
         lastMove : [],
-        lastMovePlayerId:"0"
+        lastMovePlayerId:"0",
+        playerIdToNoOfTokensInPot:{}
 
     };
 

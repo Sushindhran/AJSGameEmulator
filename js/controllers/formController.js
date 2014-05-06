@@ -12,6 +12,8 @@ angular.module("emulator").controller('FormController',function ($scope, $locati
     // Initialize an empty array for holding player tokens
     $scope.playerTokens = [];
 
+    $scope.isSingleWindow = false;
+
     /*
     * This function sets up the playerTokens array according to user input. This array is bound to text fields in view
      */
@@ -73,9 +75,10 @@ angular.module("emulator").controller('FormController',function ($scope, $locati
             $scope.playerTokens[i] = parseInt($scope.playerTokens[i]);
         }
 
+        console.log("form controller"+$scope.isSingleWindow);
         gameDataFactory.setUpGameParameters($scope.gameUrl, parseInt($scope.numberOfPlayers),
             $scope.width, $scope.height, parseInt($scope.timePerTurn),
-            $scope.isViewerEnabled, $scope.isSingleWindowMode, $scope.playerTokens);
+            $scope.isViewerEnabled, $scope.isSingleWindow, $scope.playerTokens);
 
         $location.path('emulate');
     }

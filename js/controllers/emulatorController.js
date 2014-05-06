@@ -1,7 +1,7 @@
 /**
  * Created by Sushindhran and Shwetank.
  */
-angular.module("emulator").controller('EmulatorController',function ($scope, $route, gameDataFactory) {
+angular.module("emulator").controller('EmulatorController',function ($scope, $route, $sce, gameDataFactory) {
     /*-----------------------------------
     * View Setup Logic
      -----------------------------------*/
@@ -52,10 +52,12 @@ angular.module("emulator").controller('EmulatorController',function ($scope, $ro
         // Generate playersInfo
         createPlayersInfo(params.numberOfPlayers);
         $scope.playersInfo = gameDataFactory.getGameDataProperty('playersInfo');
-        $scope.gameUrl = params.gameUrl;
+        $scope.gameUrl = $sce.trustAsResourceUrl(params.gameUrl);
         $scope.isSingleWindowMode = params.isSingleWindowMode;
         $scope.isViewerEnabled = params.isViewerEnabled;
         $scope.numberOfPlayers = params.numberOfPlayers;
+        $scope.width = params.width;
+        $scope.height = params.height;
 
 
     }
@@ -73,6 +75,7 @@ angular.module("emulator").controller('EmulatorController',function ($scope, $ro
     $scope.switchTabs = function (index) {
         // Browse through frames
         for(var i = 0 ; i < iframeArray.length; i++) {
+            console.log(iframeArray[i]);
             iframeArray[i].setAttribute("hidden","true");
         }
         //if the user clicked on the viewer tab, which is always the last iframe
@@ -86,7 +89,8 @@ angular.module("emulator").controller('EmulatorController',function ($scope, $ro
 
     var calculateExpectedframes = function(params) {
         var num = 0;
-        if($scope.isSingleWindowMode){
+        console.log("single window " + params.isSingleWindowMode);
+        if(params.isSingleWindowMode){
             num++;
         }else{
             num = params.numberOfPlayers;
@@ -103,11 +107,11 @@ angular.module("emulator").controller('EmulatorController',function ($scope, $ro
         // Call init
         init();
 
-        var frames = {length:0};
-
 
         var timer = setInterval(function() {
+            var frames;
             frames = $('.frame');
+            console.log("frame length" + frames.length + " expected frames : "+expectedFrames);
             if(frames.length === expectedFrames) {
                 clearInterval(timer);
                 for(var i = 0 ; i<frames.length; i++){
@@ -117,7 +121,7 @@ angular.module("emulator").controller('EmulatorController',function ($scope, $ro
 
                 $scope.switchTabs(0);
             }
-        },5)
+        },50)
 
     };
 
@@ -219,6 +223,7 @@ angular.module("emulator").controller('EmulatorController',function ($scope, $ro
             var lastVisibleTo = clone(visibleTo);
             var lastMove = clone(operations);
             var lastMovePlayerId = $scope.playersInfo[senderIndex].playerId;
+            var playerIdToNoOfTokensInPot = gameDataFactory.getGameDataProperty("playerIdToNoOfTokensInPot");
 
             //$scope.console(JSON.stringify(lastGameState));
             for (var i = 0; i < operations.length; i++) {
@@ -229,21 +234,6 @@ angular.module("emulator").controller('EmulatorController',function ($scope, $ro
                     gameConsole("SetTurn");
                     var currentPlayer = operation.playerId;
                     gameDataFactory.setgameDataProperty('turnOfPlayer',currentPlayer);
-                    /*timerCount = 0;
-                    if(operation.numberOfSecondsForTurn != 0){
-                        gameConsole("Setting Time Per Turn to "+operation.numberOfSecondsForTurn);
-                        timePerTurn = operation.numberOfSecondsForTurn;
-                    }
-                    if(!startTimer){
-                        if(timePerTurn==0){
-                            document.getElementById("timerLabel").setAttribute("hidden",true);
-                        }else{
-                            document.getElementById("timerLabel").removeAttribute("hidden");
-                            interval = setInterval(function(){$scope.startTimer()},1000);
-                        }
-                        startTimer = true;
-                    }*/
-                    /*end the game*/
                 }else if (operation.type === "Set") {
                     gameState[operation.key] = operation.value;
                     visibleTo[operation.key] = operation.visibleToPlayerIds;
@@ -274,7 +264,6 @@ angular.module("emulator").controller('EmulatorController',function ($scope, $ro
                         visibleTo[toKey] = oldVisibleTo[fromKey];
                     }
                 }else if(operation.type === "AttemptChangeTokens"){
-                    var playerIdToNoOfTokensInPot = {};
                     var p = operation.playerIdToNumberOfTokensInPot;
                     for( var j = 0; j < $scope.numberOfPlayers; j++){
                         var id;
