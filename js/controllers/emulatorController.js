@@ -133,8 +133,8 @@ angular.module("emulator").controller('EmulatorController',function ($scope, $ro
         gameDataFactory.setgameDataProperty("visibleTo" , {});
         gameDataFactory.setgameDataProperty("lastGameState" , {});
         gameDataFactory.setgameDataProperty("lastMove" , {});
-        gameDataFactory.setgameDataProperty("lastMovePlayerId" , {});
-        gameDataFactory.setgameDataProperty("playerIdToNoOfTokensInPot" , {});
+        gameDataFactory.setgameDataProperty("lastMovePlayerId" , "0");
+        gameDataFactory.setgameDataProperty("playerIdToNumberOfTokensInPot" , {});
         $scope.stateHistoryArray = [];
         gameDataFactory.setStateHistoryStack([]);
         stateHistoryIndex = 0;
@@ -361,7 +361,7 @@ angular.module("emulator").controller('EmulatorController',function ($scope, $ro
                 'lastState': getStateforPlayerId(yourPlayerId, gameDataFactory.getGameDataProperty('lastGameState'), gameDataFactory.getGameDataProperty('lastVisibleTo')),
                 'lastMove': gameDataFactory.getGameDataProperty('lastMove'),
                 'lastMovePlayerId': gameDataFactory.getGameDataProperty('lastMovePlayerId'),
-                'playerIdToNumberOfTokensInPot': gameDataFactory.getGameDataProperty('playerIdToNoOfTokensInPot')
+                'playerIdToNumberOfTokensInPot': gameDataFactory.getGameDataProperty('playerIdToNumberOfTokensInPot')
             };
         } else if(stateHistoryInUse == 1) { // Used in the case when
             updateUIMessage = {'type': 'UpdateUI', 'yourPlayerId': yourPlayerId.toString(),
@@ -370,7 +370,7 @@ angular.module("emulator").controller('EmulatorController',function ($scope, $ro
                 'lastState': getStateforPlayerId(yourPlayerId, parameters['lastGameState'], parameters['lastVisibleTo']),
                 'lastMove': parameters['lastMove'],
                 'lastMovePlayerId': parameters['lastMovePlayerId'],
-                'playerIdToNumberOfTokensInPot': parameters['playerIdToNoOfTokensInPot']}
+                'playerIdToNumberOfTokensInPot': parameters['playerIdToNumberOfTokensInPot']}
         }
 
         send(source,updateUIMessage);
