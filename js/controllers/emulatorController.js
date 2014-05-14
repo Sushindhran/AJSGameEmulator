@@ -121,13 +121,23 @@ angular.module("emulator").controller('EmulatorController',function ($scope, $ro
 
                 $scope.switchTabs(0);
             }
-        },50)
+        },25)
 
     };
 
     var reset = function() {
         window.parent.removeEventListener("message",listener);
         gameDataFactory.setgameDataProperty("playersInfo","");
+
+        gameDataFactory.setgameDataProperty("gameState" , {});
+        gameDataFactory.setgameDataProperty("visibleTo" , {});
+        gameDataFactory.setgameDataProperty("lastGameState" , {});
+        gameDataFactory.setgameDataProperty("lastMove" , {});
+        gameDataFactory.setgameDataProperty("lastMovePlayerId" , {});
+        gameDataFactory.setgameDataProperty("playerIdToNoOfTokensInPot" , {});
+        $scope.stateHistoryArray = [];
+        gameDataFactory.setStateHistoryStack([]);
+        stateHistoryIndex = 0;
     }
 
     /*--------------------------
@@ -180,35 +190,63 @@ angular.module("emulator").controller('EmulatorController',function ($scope, $ro
 
     // Function to listen to events from game
     var listener = function (event) {
-        var msg = event.data;
-        gameConsole("Recieved from game:");
-        gameConsole(JSON.stringify(msg));
-        var senderIndex;
-        if(msg.type == "GameReady"){
-            sourceArray.push(event.source);
-            if(sourceArray.length === expectedFrames){
-                for(var i = 0; i < expectedFrames; i++){
-                    senderIndex = findMessageSource(sourceArray[i]);
-                    sendUpdateUi(iframeArray[senderIndex].contentWindow, $scope.playersInfo[senderIndex].playerId);
+        $scope.$apply(function () {
+            var msg = event.data;
+            gameConsole("Recieved from game:");
+            gameConsole(JSON.stringify(msg));
+            var senderIndex;
+            if(msg.type == "GameReady"){
+                sourceArray.push(event.source);
+                if(sourceArray.length === expectedFrames){
+                    for(var i = 0; i < expectedFrames; i++){
+                        senderIndex = findMessageSource(sourceArray[i]);
+                        sendUpdateUi(iframeArray[senderIndex].contentWindow, $scope.playersInfo[senderIndex].playerId);
+                    }
                 }
+
+            }else {
+                if(stateHistoryInUse === 1) {
+                    resetGameState($scope.stateHistoryArray[stateHistoryIndex]);
+                }
+                senderIndex = findMessageSource(event.source);
+
+                gameConsole("Sender index" + senderIndex);
+                gameConsole(" Receiving from " + $scope.playersInfo[senderIndex].playerId + msg.type);
+
+                processMessage(msg, senderIndex)
             }
-
-        }else {
-
-
-            senderIndex = findMessageSource(event.source);
-
-            gameConsole("Sender index" + senderIndex);
-            gameConsole(" Receiving from " + $scope.playersInfo[senderIndex].playerId + msg.type);
-
-            processMessage(msg, senderIndex)
-        }
-    };
+        });
+    }
 
     /*
     Globals needed to process state
      */
+    $scope.stateHistoryArray = [];
+    var stateHistoryInUse = 0;
+    var stateHistoryIndex = 0;
 
+    var resetGameState = function(parameters) {
+        gameDataFactory.setgameDataProperty('lastGameState',parameters['lastGameState']);
+        gameDataFactory.setgameDataProperty('lastVisibleTo',parameters['lastVisibleTo']);
+        gameDataFactory.setgameDataProperty('lastMove',parameters['lastMove']);
+        gameDataFactory.setgameDataProperty('lastMovePlayerId',parameters['lastMovePlayerId']);
+        gameDataFactory.setgameDataProperty('gameState',parameters['gameState']);
+        gameDataFactory.setgameDataProperty('visibleTo',parameters['visibleTo']);
+        gameDataFactory.setgameDataProperty('playerIdToNumberOfTokensInPot',parameters['playerIdToNumberOfTokensInPot']);
+        stateHistoryInUse = 0;
+        var len = $scope.stateHistoryArray.length;
+        $scope.stateHistoryArray.splice(stateHistoryIndex+1,len-1-stateHistoryIndex);
+        gameDataFactory.setStateHistoryStack(clone($scope.stateHistoryArray));
+    }
+
+    $scope.sliderHandler = function(index) {
+        var parameters;
+        stateHistoryInUse = 1;
+        stateHistoryIndex = index;
+        parameters = $scope.stateHistoryArray[index];
+        sendUpdateUIToEveryone(parameters);
+
+    }
 
     // Function to process messages
     var processMessage = function(msg, senderIndex) {
@@ -223,7 +261,7 @@ angular.module("emulator").controller('EmulatorController',function ($scope, $ro
             var lastVisibleTo = clone(visibleTo);
             var lastMove = clone(operations);
             var lastMovePlayerId = $scope.playersInfo[senderIndex].playerId;
-            var playerIdToNoOfTokensInPot = gameDataFactory.getGameDataProperty("playerIdToNoOfTokensInPot");
+            var playerIdToNumberOfTokensInPot = gameDataFactory.getGameDataProperty("playerIdToNumberOfTokensInPot");
 
             //$scope.console(JSON.stringify(lastGameState));
             for (var i = 0; i < operations.length; i++) {
@@ -268,46 +306,72 @@ angular.module("emulator").controller('EmulatorController',function ($scope, $ro
                     for( var j = 0; j < $scope.numberOfPlayers; j++){
                         var id;
                         id = $scope.playersInfo[j].playerId.toString();
-                        if(! playerIdToNoOfTokensInPot.hasOwnProperty(id) ) {
-                            playerIdToNoOfTokensInPot[id] = p[id];
-                        } else if (playerIdToNoOfTokensInPot[id] == 0) {
-                            playerIdToNoOfTokensInPot[id] = p[id];
+                        if(! playerIdToNumberOfTokensInPot.hasOwnProperty(id) ) {
+                            playerIdToNumberOfTokensInPot[id] = p[id];
+                        } else if (playerIdToNumberOfTokensInPot[id] == 0) {
+                            playerIdToNumberOfTokensInPot[id] = p[id];
                         }
                     }
                 }else if(operation.type == "EndGame"){
                     gameConsole("End Game" + JSON.stringify(msg.data));
                 }
             }
+            stateHistoryInUse = 0;
             gameDataFactory.setgameDataProperty('lastGameState',lastGameState);
             gameDataFactory.setgameDataProperty('lastVisibleTo',lastVisibleTo);
             gameDataFactory.setgameDataProperty('lastMove',lastMove);
             gameDataFactory.setgameDataProperty('lastMovePlayerId',lastMovePlayerId);
             gameDataFactory.setgameDataProperty('gameState',gameState);
             gameDataFactory.setgameDataProperty('visibleTo',visibleTo);
-            gameDataFactory.setgameDataProperty('playerIdToNoOfTokensInPot',playerIdToNoOfTokensInPot);
+            gameDataFactory.setgameDataProperty('playerIdToNumberOfTokensInPot',playerIdToNumberOfTokensInPot);
 
+            var stateHistoryObj = {
+                'lastGameState':clone(lastGameState),
+                'lastVisibleTo':clone(lastVisibleTo),
+                'lastMove':clone(lastMove),
+                'lastMovePlayerId':clone(lastMovePlayerId),
+                'gameState': clone(gameState),
+                'visibleTo':clone(visibleTo),
+                'playerIdToNumberOfTokensInPot':clone(playerIdToNumberOfTokensInPot)
+            }
+            gameDataFactory.pushToStateHistoryStack(stateHistoryObj);
+            $scope.stateHistoryArray = gameDataFactory.getStateHistoryStack();
             //We are not sending verify moves right now
             // Send update UI to everyone
 
-            for(var k = 0; k< $scope.numberOfPlayers; k++){
-                sendUpdateUi(iframeArray[k].contentWindow,$scope.playersInfo[k].playerId);
-            }
+            sendUpdateUIToEveryone();
 
 
         }
     };
 
-    // Function to create updateUI object according to a playerId
-    var sendUpdateUi = function(source, yourPlayerId){
+    var sendUpdateUIToEveryone = function (parameters) {
+        for(var k = 0; k< $scope.numberOfPlayers; k++){
+            sendUpdateUi(iframeArray[k].contentWindow,$scope.playersInfo[k].playerId, parameters);
+        }
+    }
 
-        var updateUIMessage = {'type': 'UpdateUI', 'yourPlayerId': yourPlayerId.toString(),
-            'playersInfo': $scope.playersInfo,
-            'state': getStateforPlayerId(yourPlayerId, gameDataFactory.getGameDataProperty('gameState'), gameDataFactory.getGameDataProperty('visibleTo')),
-            'lastState':gameDataFactory.getGameDataProperty('lastGameState'),
-            'lastMove':gameDataFactory.getGameDataProperty('lastMove'),
-            'lastMovePlayerId': gameDataFactory.getGameDataProperty('lastMovePlayerId'),
-            'playerIdToNumberOfTokensInPot':gameDataFactory.getGameDataProperty('playerIdToNoOfTokensInPot')
-        };
+    // Function to create updateUI object according to a playerId
+    var sendUpdateUi = function(source, yourPlayerId, parameters){
+        var updateUIMessage;
+        if(stateHistoryInUse == 0) {    // Send the updateUi after fetching data from the factory (Case: when user is not using the state history slider)
+             updateUIMessage = {'type': 'UpdateUI', 'yourPlayerId': yourPlayerId.toString(),
+                'playersInfo': $scope.playersInfo,
+                'state': getStateforPlayerId(yourPlayerId, gameDataFactory.getGameDataProperty('gameState'), gameDataFactory.getGameDataProperty('visibleTo')),
+                'lastState': getStateforPlayerId(yourPlayerId, gameDataFactory.getGameDataProperty('lastGameState'), gameDataFactory.getGameDataProperty('lastVisibleTo')),
+                'lastMove': gameDataFactory.getGameDataProperty('lastMove'),
+                'lastMovePlayerId': gameDataFactory.getGameDataProperty('lastMovePlayerId'),
+                'playerIdToNumberOfTokensInPot': gameDataFactory.getGameDataProperty('playerIdToNoOfTokensInPot')
+            };
+        } else if(stateHistoryInUse == 1) { // Used in the case when
+            updateUIMessage = {'type': 'UpdateUI', 'yourPlayerId': yourPlayerId.toString(),
+                'playersInfo': $scope.playersInfo,
+                'state': getStateforPlayerId(yourPlayerId, parameters['gameState'], parameters['visibleTo']),
+                'lastState': getStateforPlayerId(yourPlayerId, parameters['lastGameState'], parameters['lastVisibleTo']),
+                'lastMove': parameters['lastMove'],
+                'lastMovePlayerId': parameters['lastMovePlayerId'],
+                'playerIdToNumberOfTokensInPot': parameters['playerIdToNoOfTokensInPot']}
+        }
 
         send(source,updateUIMessage);
     }

@@ -37,9 +37,11 @@ angular.module('emulator').factory('gameDataFactory',function () {
         lastGameState : {},
         lastMove : [],
         lastMovePlayerId:"0",
-        playerIdToNoOfTokensInPot:{}
+        playerIdToNumberOfTokensInPot:{}
 
     };
+
+    var stateHistoryStack = [];
 
     var constants = {
         aiPlayerId : 0,
@@ -71,6 +73,18 @@ angular.module('emulator').factory('gameDataFactory',function () {
 
     factory.getGameDataProperty = function(key) {
         return gameData[key];
+    }
+
+    factory.pushToStateHistoryStack = function(obj) {
+        stateHistoryStack.push(obj);
+    }
+
+    factory.getStateHistoryStack = function() {
+        return stateHistoryStack;
+    }
+
+    factory.setStateHistoryStack = function(stack) {
+        stateHistoryStack = stack;
     }
 
     return factory;

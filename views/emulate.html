@@ -1,6 +1,9 @@
 <div data-ng-init="framesInit()">
     <button data-ng-click="reload()">Reload Emulator</button>
 
+    <!--Insert the state slider via the directive-->
+    <ajs-slider-directive></ajs-slider-directive>
+
     <div id="playerSwitchbuttons">
         <ul>
             <li class="tabs"  data-ng-if="!isSingleWindowMode" data-ng-repeat="n in [] | range:numberOfPlayers" data-ng-click="switchTabs($index)">Player {{playersInfo[$index].playerId}} </li>
