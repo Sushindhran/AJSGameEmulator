@@ -16,6 +16,9 @@ angular.module("emulator").controller('EmulatorController',function ($scope, $ro
     // Fetch game data from the factory done in init
     var params = {};
 
+    // Stores the game constants
+    var constants;
+
     var calculateExpectedframes = function(params) {
         var num = 0;
         if($scope.isSingleWindowMode){
@@ -36,9 +39,16 @@ angular.module("emulator").controller('EmulatorController',function ($scope, $ro
         var list = [];
         var i = 0, playerId = 42;
         for(i=0; i< num; i++) {
+
             playerId += i;
             list = list.concat({"playerId":playerId.toString()});
         }
+        console.log("isngle window emu" + params.isSingleWindowMode);
+        console.log("ai player " + params.aiPlayerEnabled);
+        if(params.aiPlayerEnabled) {
+            list[list.length-1] = {"playerId":constants.aiPlayerId.toString()};
+        }
+        console.log(JSON.stringify(list));
         // Save playersInfo in factory
         gameDataFactory.setgameDataProperty('playersInfo',list);
     };
@@ -46,7 +56,7 @@ angular.module("emulator").controller('EmulatorController',function ($scope, $ro
     var init = function () {
         // Setup the listener from game
         window.parent.addEventListener('message', listener, false);
-
+        constants = gameDataFactory.getConstants();
         params = gameDataFactory.getGameSetupParameters();
         expectedFrames = calculateExpectedframes(params);
         // Generate playersInfo
@@ -75,7 +85,7 @@ angular.module("emulator").controller('EmulatorController',function ($scope, $ro
     $scope.switchTabs = function (index) {
         // Browse through frames
         for(var i = 0 ; i < iframeArray.length; i++) {
-            console.log(iframeArray[i]);
+            //console.log(iframeArray[i]);
             iframeArray[i].setAttribute("hidden","true");
         }
         //if the user clicked on the viewer tab, which is always the last iframe
@@ -116,7 +126,7 @@ angular.module("emulator").controller('EmulatorController',function ($scope, $ro
                 clearInterval(timer);
                 for(var i = 0 ; i<frames.length; i++){
                     iframeArray.push(frames[i].getElementsByTagName('iframe')[0]);
-                    console.log(iframeArray[i]);
+                    //console.log(iframeArray[i]);
                 }
 
                 $scope.switchTabs(0);
@@ -132,7 +142,7 @@ angular.module("emulator").controller('EmulatorController',function ($scope, $ro
         gameDataFactory.setgameDataProperty("gameState" , {});
         gameDataFactory.setgameDataProperty("visibleTo" , {});
         gameDataFactory.setgameDataProperty("lastGameState" , {});
-        gameDataFactory.setgameDataProperty("lastMove" , {});
+        gameDataFactory.setgameDataProperty("lastMove" , []);
         gameDataFactory.setgameDataProperty("lastMovePlayerId" , "0");
         gameDataFactory.setgameDataProperty("playerIdToNumberOfTokensInPot" , {});
         $scope.stateHistoryArray = [];
@@ -143,7 +153,13 @@ angular.module("emulator").controller('EmulatorController',function ($scope, $ro
     /*--------------------------
     * Emulation Logic
      -------------------------*/
-
+    /*
+     Globals needed to process state
+     */
+    $scope.stateHistoryArray = [];  // Array which stores the state information
+    var stateHistoryInUse = 0;      // Flag to indicate if the user has gone to a previous state
+    var stateHistoryIndex = 0;      // 
+    var turnOf;
 
     // Send message
     var send = function(source, message){
@@ -200,7 +216,15 @@ angular.module("emulator").controller('EmulatorController',function ($scope, $ro
                 if(sourceArray.length === expectedFrames){
                     for(var i = 0; i < expectedFrames; i++){
                         senderIndex = findMessageSource(sourceArray[i]);
-                        sendUpdateUi(iframeArray[senderIndex].contentWindow, $scope.playersInfo[senderIndex].playerId);
+                        var playerId;
+                        if(params.isViewerEnabled && senderIndex == sourceArray.length-1) {
+                            playerId = constants.viewerId;
+                        }
+                        else {
+                            playerId = $scope.playersInfo[senderIndex].playerId;
+                        }
+
+                        sendUpdateUi(iframeArray[senderIndex].contentWindow, playerId);
                     }
                 }
 
@@ -218,12 +242,6 @@ angular.module("emulator").controller('EmulatorController',function ($scope, $ro
         });
     }
 
-    /*
-    Globals needed to process state
-     */
-    $scope.stateHistoryArray = [];
-    var stateHistoryInUse = 0;
-    var stateHistoryIndex = 0;
 
     var resetGameState = function(parameters) {
         gameDataFactory.setgameDataProperty('lastGameState',parameters['lastGameState']);
@@ -243,7 +261,9 @@ angular.module("emulator").controller('EmulatorController',function ($scope, $ro
         var parameters;
         stateHistoryInUse = 1;
         stateHistoryIndex = index;
+
         parameters = $scope.stateHistoryArray[index];
+        $scope.turnOfPlayer= parameters.turnOfPlayer;
         sendUpdateUIToEveryone(parameters);
 
     }
@@ -271,6 +291,7 @@ angular.module("emulator").controller('EmulatorController',function ($scope, $ro
                 if(operation.type === "SetTurn"){
                     gameConsole("SetTurn");
                     var currentPlayer = operation.playerId;
+                    $scope.turnOfPlayer = currentPlayer;
                     gameDataFactory.setgameDataProperty('turnOfPlayer',currentPlayer);
                 }else if (operation.type === "Set") {
                     gameState[operation.key] = operation.value;
@@ -326,6 +347,7 @@ angular.module("emulator").controller('EmulatorController',function ($scope, $ro
             gameDataFactory.setgameDataProperty('playerIdToNumberOfTokensInPot',playerIdToNumberOfTokensInPot);
 
             var stateHistoryObj = {
+                'turnOfPlayer':clone($scope.turnOfPlayer),
                 'lastGameState':clone(lastGameState),
                 'lastVisibleTo':clone(lastVisibleTo),
                 'lastMove':clone(lastMove),
@@ -346,9 +368,19 @@ angular.module("emulator").controller('EmulatorController',function ($scope, $ro
     };
 
     var sendUpdateUIToEveryone = function (parameters) {
-        for(var k = 0; k< $scope.numberOfPlayers; k++){
-            sendUpdateUi(iframeArray[k].contentWindow,$scope.playersInfo[k].playerId, parameters);
+        if (!params.isSingleWindowMode) {
+            for (var k = 0; k < $scope.numberOfPlayers; k++) {
+                sendUpdateUi(iframeArray[k].contentWindow, $scope.playersInfo[k].playerId, parameters);
+            }
         }
+        else {
+            sendUpdateUi(iframeArray[0].contentWindow, gameDataFactory.getGameDataProperty('turnOfPlayer'), parameters );
+        }
+
+        if(params.isViewerEnabled) {
+            sendUpdateUi(iframeArray[iframeArray.length - 1].contentWindow, constants.viewerId);
+        }
+
     }
 
     // Function to create updateUI object according to a playerId

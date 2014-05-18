@@ -44,11 +44,11 @@ angular.module('emulator').factory('gameDataFactory',function () {
     var stateHistoryStack = [];
 
     var constants = {
-        aiPlayerId : 0,
-        viewerId : -1
+        aiPlayerId : "0",
+        viewerId : "-1"
     }
 
-    factory.setUpGameParameters = function(gameUrl, numberOfPlayers, width, height, timePerTurn, isViewerEnabled, isSingleWindowMode, playerTokens ) {
+    factory.setUpGameParameters = function(gameUrl, numberOfPlayers, width, height, timePerTurn, isViewerEnabled, isSingleWindowMode, aiPlayerEnabled, playerTokens ) {
         gameSetupParameters.gameUrl = gameUrl;
         gameSetupParameters.numberOfPlayers = numberOfPlayers;
         gameSetupParameters.width = width;
@@ -56,6 +56,7 @@ angular.module('emulator').factory('gameDataFactory',function () {
         gameSetupParameters.timePerTurn = timePerTurn;
         gameSetupParameters.isViewerEnabled = isViewerEnabled;
         gameSetupParameters.isSingleWindowMode = isSingleWindowMode;
+        gameSetupParameters.aiPlayerEnabled = aiPlayerEnabled;
         gameSetupParameters.playerTokens = playerTokens;
     };
 
@@ -85,6 +86,10 @@ angular.module('emulator').factory('gameDataFactory',function () {
 
     factory.setStateHistoryStack = function(stack) {
         stateHistoryStack = stack;
+    }
+
+    factory.getConstants = function() {
+        return constants;
     }
 
     return factory;

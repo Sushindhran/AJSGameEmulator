@@ -20,6 +20,8 @@
         <input type="checkbox" ng-model="isViewerEnabled"><br/>
         <label class="fieldLabel"> Single Window Mode </label>
         <input type="checkbox" ng-model="isSingleWindow"><br/>
+        <label class="fieldLabel"> AI Player </label>
+        <input type="checkbox" ng-model="aiPlayerEnabled" ng-change = "aiPlayerChecked()"><br/>
 
 
         <input type="submit" ng-click="setup()" value="Emulate" >

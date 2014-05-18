@@ -32,6 +32,12 @@ angular.module("emulator").controller('FormController',function ($scope, $locati
         }
     }
 
+    $scope.aiPlayerChecked = function () {
+        if($scope.aiPlayerEnabled) {
+            $scope.isSingleWindow = true;
+        }
+    }
+
     // Invoke the above function for default number of players with default amount (this pre-fils the token fields in the view)
     $scope.playerTokenSetup();
 
@@ -65,6 +71,9 @@ angular.module("emulator").controller('FormController',function ($scope, $locati
         if (typeof $scope.isSingleWindowMode === "undefined"){
             $scope.isSingleWindowMode = false;
         }
+        if (typeof $scope.aiPlayerEnabled === "undefined"){
+            $scope.aiPlayerEnabled = false;
+        }
         if (typeof $scope.isViewerEnabled === "undefined"){
             $scope.isViewerEnabled = false;
         }
@@ -75,10 +84,11 @@ angular.module("emulator").controller('FormController',function ($scope, $locati
             $scope.playerTokens[i] = parseInt($scope.playerTokens[i]);
         }
 
-        console.log("form controller"+$scope.isSingleWindow);
+        console.log("single window"+$scope.isSingleWindow);
+        console.log("ai player" + $scope.aiPlayerEnabled);
         gameDataFactory.setUpGameParameters($scope.gameUrl, parseInt($scope.numberOfPlayers),
             $scope.width, $scope.height, parseInt($scope.timePerTurn),
-            $scope.isViewerEnabled, $scope.isSingleWindow, $scope.playerTokens);
+            $scope.isViewerEnabled, $scope.isSingleWindow, $scope.aiPlayerEnabled, $scope.playerTokens);
 
         $location.path('emulate');
     }
